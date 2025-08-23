@@ -34,19 +34,27 @@ fn main() {
 
 fn init() {
     match fs::create_dir("content") {
-        Ok(_) => println!("dir created successfully"),
-        Err(e) => println!("failed to /content: {e}"),
+        Ok(_) => println!("./content created successfully"),
+        Err(e) => println!("failed to create ./content: {e}"),
     };
 
     match fs::create_dir("styles") {
-        Ok(_) => println!("dir created successfully"),
-        Err(e) => println!("failed to create /styles: {e}"),
+        Ok(_) => println!("./styles created successfully"),
+        Err(e) => println!("failed to create ./styles: {e}"),
     };
 
-    File::create("config.toml")
+    File::create("Config.toml")
         .and_then(|mut file| file.write_all("test4testes".as_bytes()))
         .map(|_| println!("config created successfully"))
         .unwrap_or_else(|e| println!("failed to create config: {e}"));
+
+    println!(
+        "
+finished initializing ssssg start creating your markdown
+content in the content folder, css goes into the styles folder,
+then run 'ssssg serve' to preview locally.
+    "
+    );
 }
 
 fn build() {}
