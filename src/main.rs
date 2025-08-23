@@ -1,3 +1,8 @@
+use std::{
+    fs::{self, File},
+    io::Write,
+};
+
 use axum::{Router, response::Html, routing::get};
 use clap::{Parser, Subcommand};
 use tokio::signal::{self};
@@ -12,18 +17,39 @@ struct Args {
 
 #[derive(Subcommand, Debug)]
 enum Commands {
-    Serve,
+    Init,
     Build,
+    Serve,
 }
 
 fn main() {
     let args = Args::parse();
 
     match &args.command {
+        Commands::Init => init(),
+        Commands::Build => build(),
         Commands::Serve => serve(),
-        Commands::Build => todo!(),
     }
 }
+
+fn init() {
+    match fs::create_dir("content") {
+        Ok(_) => println!("dir created successfully"),
+        Err(e) => println!("failed to /content: {e}"),
+    };
+
+    match fs::create_dir("styles") {
+        Ok(_) => println!("dir created successfully"),
+        Err(e) => println!("failed to create /styles: {e}"),
+    };
+
+    File::create("config.toml")
+        .and_then(|mut file| file.write_all("test4testes".as_bytes()))
+        .map(|_| println!("config created successfully"))
+        .unwrap_or_else(|e| println!("failed to create config: {e}"));
+}
+
+fn build() {}
 
 #[tokio::main]
 async fn serve() {
