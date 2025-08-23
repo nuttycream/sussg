@@ -5,11 +5,7 @@ use std::{
     io::Write,
 };
 
-use axum::{
-    Router,
-    response::{Html, IntoResponse},
-    routing::get,
-};
+use axum::Router;
 use clap::{Parser, Subcommand};
 use tokio::signal::{self};
 use tower_http::services::ServeDir;
@@ -91,6 +87,9 @@ fn build() {
 #[tokio::main]
 async fn serve() {
     let static_files = ServeDir::new("./public");
+
+    // todo: cannot use "/" to server static files
+    // need workaround
     let app = Router::new()
         .nest_service("/index", static_files)
         .layer(LiveReloadLayer::new());
