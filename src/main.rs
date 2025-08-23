@@ -1,12 +1,21 @@
+pub mod md_to_html;
+
 use std::{
     fs::{self, File},
     io::Write,
 };
 
-use axum::{Router, response::Html, routing::get};
+use axum::{
+    Router,
+    response::{Html, IntoResponse},
+    routing::get,
+};
 use clap::{Parser, Subcommand};
 use tokio::signal::{self};
+use tower_http::services::ServeDir;
 use tower_livereload::LiveReloadLayer;
+
+use crate::md_to_html::convert;
 
 #[derive(Parser, Debug)]
 #[command(version, about, long_about = None)]
@@ -57,12 +66,33 @@ then run 'ssssg serve' to preview locally.
     );
 }
 
-fn build() {}
+fn build() {
+    match fs::create_dir("public") {
+        Ok(_) => println!("./public created successfully"),
+        Err(e) => println!("failed to create ./public: {e}"),
+    };
+
+    let contents = fs::read_dir("./content").unwrap();
+
+    for content in contents {
+        let entry = content.unwrap();
+        let path = entry.path();
+        if path.file_name().unwrap() == "index.md" {
+            let md_string = fs::read_to_string(&path).unwrap();
+            let html = convert(md_string);
+            let root = File::create("./public/index.html");
+            root.and_then(|mut file| file.write_all(html.as_bytes()))
+                .map(|_| println!("index created successfully"))
+                .unwrap_or_else(|e| println!("failed to create index.html: {e}"));
+        }
+    }
+}
 
 #[tokio::main]
 async fn serve() {
+    let static_files = ServeDir::new("./public");
     let app = Router::new()
-        .route("/", get(handler))
+        .nest_service("/index", static_files)
         .layer(LiveReloadLayer::new());
 
     let listener = tokio::net::TcpListener::bind("127.0.0.1:3030")
@@ -74,10 +104,6 @@ async fn serve() {
         .with_graceful_shutdown(shutdown_signal())
         .await
         .unwrap();
-}
-
-async fn handler() -> Html<&'static str> {
-    Html("<h1>Hello, World!</h1>")
 }
 
 async fn shutdown_signal() {
