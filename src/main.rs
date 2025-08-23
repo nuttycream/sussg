@@ -1,3 +1,71 @@
+use axum::{Router, response::Html, routing::get};
+use clap::{Parser, Subcommand};
+use tokio::signal::{self};
+use tower_livereload::LiveReloadLayer;
+
+#[derive(Parser, Debug)]
+#[command(version, about, long_about = None)]
+struct Args {
+    #[command(subcommand)]
+    command: Commands,
+}
+
+#[derive(Subcommand, Debug)]
+enum Commands {
+    Serve,
+    Build,
+}
+
 fn main() {
-    println!("Hello, world!");
+    let args = Args::parse();
+
+    match &args.command {
+        Commands::Serve => serve(),
+        Commands::Build => todo!(),
+    }
+}
+
+#[tokio::main]
+async fn serve() {
+    let app = Router::new()
+        .route("/", get(handler))
+        .layer(LiveReloadLayer::new());
+
+    let listener = tokio::net::TcpListener::bind("127.0.0.1:3030")
+        .await
+        .unwrap();
+
+    println!("listening on {}", listener.local_addr().unwrap());
+    axum::serve(listener, app)
+        .with_graceful_shutdown(shutdown_signal())
+        .await
+        .unwrap();
+}
+
+async fn handler() -> Html<&'static str> {
+    Html("<h1>Hello, World!</h1>")
+}
+
+async fn shutdown_signal() {
+    let ctrl_c = async {
+        signal::ctrl_c()
+            .await
+            .expect("failed to install Ctrl+C handler");
+    };
+
+    #[cfg(unix)]
+    let terminate = async {
+        signal::unix::signal(signal::unix::SignalKind::terminate())
+            .expect("failed to install signal handler")
+            .recv()
+            .await;
+    };
+
+    #[cfg(not(unix))]
+    let terminate = std::future::pending::<()>();
+
+    tokio::select! {
+        _ = ctrl_c => {},
+        _ = terminate => {},
+    }
 }

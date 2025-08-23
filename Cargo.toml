@@ -4,3 +4,9 @@ version = "0.1.0"
 edition = "2024"
 
 [dependencies]
+axum = "0.8.4"
+clap = { version = "4.5.45", features = ["derive"] }
+pulldown-cmark = "0.13.0"
+tokio = { version = "1.47.1", features = ["full"] }
+tower-http = { version = "0.6.6", features = ["timeout"] }
+tower-livereload = "0.9.6"
