@@ -1,7 +1,8 @@
-use pulldown_cmark::Parser;
 use pulldown_cmark_frontmatter::FrontmatterExtractor;
 
 pub fn convert(md_string: String) -> String {
+    extract_frontmatter(md_string.clone());
+
     let parser = pulldown_cmark::Parser::new(&md_string);
 
     let mut html_output = String::new();
@@ -11,6 +12,12 @@ pub fn convert(md_string: String) -> String {
 }
 
 fn extract_frontmatter(md_string: String) -> String {
-    let mut extractor = FrontmatterExtractor::new(Parser::new(&md_string));
-    let frontmatter = extractor.frontmatter.expect("no frontmatter detected");
+    let extractor = FrontmatterExtractor::from_markdown(&md_string);
+    let frontmatter = extractor.extract().expect("no frontmatter detected");
+
+    let code_block = frontmatter.code_block.expect("code block not detected");
+
+    println!("{}", code_block.source.clone().into_string());
+
+    code_block.source.into_string()
 }
