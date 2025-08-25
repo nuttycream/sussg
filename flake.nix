@@ -23,6 +23,10 @@
       in
         with pkgs; {
           devShells.default = mkShell {
+            packages = with pkgs; [
+              just
+            ];
+
             buildInputs = [
               openssl
               pkg-config
