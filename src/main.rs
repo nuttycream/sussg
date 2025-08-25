@@ -1,4 +1,4 @@
-pub mod md_to_html;
+pub mod convert;
 pub mod serve;
 
 use std::{
@@ -9,7 +9,7 @@ use std::{
 
 use clap::{Parser, Subcommand};
 
-use crate::md_to_html::convert;
+use crate::convert::convert;
 
 #[derive(Parser, Debug)]
 #[command(version, about, long_about = None)]
