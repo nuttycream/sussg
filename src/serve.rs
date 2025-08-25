@@ -10,7 +10,7 @@ pub async fn serve() {
     // todo: cannot use "/" to server static files
     // need workaround
     let app = Router::new()
-        .nest_service("/index", static_files)
+        .fallback_service(static_files)
         .layer(LiveReloadLayer::new());
 
     let listener = tokio::net::TcpListener::bind("127.0.0.1:3030")
