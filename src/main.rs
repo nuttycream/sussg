@@ -92,13 +92,27 @@ fn build() {
     for content in contents {
         let entry = content.unwrap();
         let path = entry.path();
-        if path.file_name().unwrap() == "index.md" {
-            let md_string = fs::read_to_string(&path).unwrap();
-            let html = convert(md_string, styles.clone());
-            let root = File::create("./public/index.html");
-            root.and_then(|mut file| file.write_all(html.as_bytes()))
-                .map(|_| println!("index created successfully"))
-                .unwrap_or_else(|e| println!("failed to create index.html: {e}"));
+        if let Some(extension) = path.extension()
+            && extension == "md"
+        {
+            if path.file_name().unwrap() == "index.md" {
+                let md_string = fs::read_to_string(&path).unwrap();
+                let html = convert(md_string, styles.clone());
+                let root = File::create("./public/index.html");
+                root.and_then(|mut file| file.write_all(html.as_bytes()))
+                    .map(|_| println!("index created successfully"))
+                    .unwrap_or_else(|e| println!("failed to create index.html: {e}"));
+            } else if path.is_file() {
+                let md_string = fs::read_to_string(&path).unwrap();
+                let html = convert(md_string, styles.clone());
+                let root = File::create(format!(
+                    "./public/{}.html",
+                    path.file_name().unwrap().to_str().unwrap()
+                ));
+                root.and_then(|mut file| file.write_all(html.as_bytes()))
+                    .map(|_| println!("created successfully"))
+                    .unwrap_or_else(|e| println!("failed to create index.html: {e}"));
+            }
         }
     }
 }
