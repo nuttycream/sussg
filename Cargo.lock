@@ -924,6 +924,7 @@ dependencies = [
  "clap",
  "pulldown-cmark 0.13.0",
  "pulldown-cmark-frontmatter",
+ "serde",
  "tokio",
  "toml",
  "tower-http",
