@@ -1,4 +1,4 @@
-all: build
+all: build serve
 
 init:
     cargo run -- init
