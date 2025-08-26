@@ -43,7 +43,7 @@ pub fn build() {
             // HOLY FUCK LMAO
             let count = relative_path.components().count();
             let redirect_path = if count <= 1 {
-                "."
+                "./"
             } else {
                 &format!("{}/", "..".repeat(count - 1))
             };
