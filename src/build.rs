@@ -1,4 +1,5 @@
 use std::{
+    ffi::OsStr,
     fs::{self, File},
     io::Write,
     path::Path,
@@ -14,15 +15,39 @@ pub fn build() {
         Err(e) => println!("failed to create ./public: {e}"),
     };
 
-    let contents = fs::read_dir("./content").unwrap();
-    let styles_dir = fs::read_dir("./styles").unwrap();
+    let mut styles = Vec::new();
+    for style in WalkDir::new("./styles").into_iter().filter_map(|e| e.ok()) {
+        if style.path().extension() == Some(OsStr::new("css")) {
+            let path = style.path();
+            let relative_path = path.strip_prefix("./styles").unwrap();
+            let out = Path::new("./public").join(relative_path);
+            styles.push(relative_path.to_string_lossy().to_string());
+            fs::create_dir_all(out.parent().unwrap()).unwrap();
+            fs::copy(path, &out).unwrap();
 
-    for entry in WalkDir::new("./content") {
-        println!("{}", entry.unwrap().path().display())
+            println!("created: {}", out.display());
+        }
     }
 
-    let mut styles = Vec::new();
-    for style in styles_dir {
+    for content in WalkDir::new("./content").into_iter().filter_map(|e| e.ok()) {
+        if content.path().extension() == Some(OsStr::new("md")) {
+            let path = content.path();
+            let md_string = fs::read_to_string(path).unwrap();
+            let html = convert(md_string, styles.clone());
+
+            let relative_path = path.strip_prefix("./content").unwrap();
+            let out = Path::new("./public")
+                .join(relative_path)
+                .with_extension("html");
+
+            fs::create_dir_all(out.parent().unwrap()).unwrap();
+
+            fs::write(&out, html).unwrap();
+            println!("created: {}", out.display());
+        }
+    }
+
+    /* for style in styles_dir {
         let entry = style.unwrap();
         let path = entry.path();
         if let Some(extension) = path.extension()
@@ -66,5 +91,5 @@ pub fn build() {
                     .unwrap_or_else(|e| println!("failed to create index.html: {e}"));
             }
         }
-    }
+    } */
 }
