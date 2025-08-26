@@ -7,4 +7,10 @@ stack draft
 
 - pulldown-cmark
 - mustache templating with ramhorns
-- axum for local serve (overkill(?))
+- axum for local serve (overkill(?)) ah who cares
+
+todo
+
+- [] templating impl
+- [] style injector w nested dir support
+- [] livereload injector
