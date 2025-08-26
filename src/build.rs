@@ -4,6 +4,8 @@ use std::{
     path::Path,
 };
 
+use walkdir::WalkDir;
+
 use crate::convert;
 
 pub fn build() {
@@ -14,6 +16,10 @@ pub fn build() {
 
     let contents = fs::read_dir("./content").unwrap();
     let styles_dir = fs::read_dir("./styles").unwrap();
+
+    for entry in WalkDir::new("./content") {
+        println!("{}", entry.unwrap().path().display())
+    }
 
     let mut styles = Vec::new();
     for style in styles_dir {
