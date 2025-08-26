@@ -11,6 +11,6 @@ stack draft
 
 todo
 
-- [] templating impl
-- [] style injector w nested dir support
-- [] livereload injector
+- [ ] templating impl
+- [x] style injector w nested dir support
+- [ ] livereload injector
