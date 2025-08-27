@@ -6,7 +6,7 @@ edition = "2024"
 [dependencies]
 axum = "0.8.4"
 clap = { version = "4.5.45", features = ["derive"] }
-pulldown-cmark = "0.13.0"
+pulldown-cmark = { version = "0.12.0", features = ["html"] }
 pulldown-cmark-frontmatter = "0.4.0"
 serde = { version = "1.0.219", features = ["derive"] }
 tokio = { version = "1.47.1", features = ["full"] }
