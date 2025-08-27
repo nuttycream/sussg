@@ -14,6 +14,11 @@ pub fn init() {
         Err(e) => println!("failed to create ./styles: {e}"),
     };
 
+    match fs::create_dir("templates") {
+        Ok(_) => println!("./templates created successfully"),
+        Err(e) => println!("failed to create ./templates: {e}"),
+    };
+
     File::create("Config.toml")
         .and_then(|mut file| file.write_all("test4testes".as_bytes()))
         .map(|_| println!("config created successfully"))

@@ -64,4 +64,10 @@ pub fn build() {
             println!("created: {}", out.display());
         }
     }
+
+    // build out the templates
+    for template in WalkDir::new("./templates")
+        .into_iter()
+        .filter_map(|e| e.ok())
+    {}
 }
