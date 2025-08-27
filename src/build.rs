@@ -5,9 +5,10 @@ use std::{
     path::Path,
 };
 
+use ramhorns::Template;
 use walkdir::WalkDir;
 
-use crate::convert;
+use crate::{convert, toml_stuff::Frontmatter};
 
 pub fn build() {
     match fs::create_dir("public") {
@@ -69,5 +70,41 @@ pub fn build() {
     for template in WalkDir::new("./templates")
         .into_iter()
         .filter_map(|e| e.ok())
-    {}
+    {
+        let yea = template.path().extension() == Some(OsStr::new("html"));
+        let oh = template.path().extension() == Some(OsStr::new("moustache"));
+
+        if yea || oh {
+            let source = fs::read_to_string(template.path()).unwrap();
+            let tpl = Template::new(source).unwrap();
+
+            /*
+            title: String,
+            style: String,
+            overide_main_style: Option<bool>,
+            description: Option<String>,
+            author: Option<String>,
+            date: Option<Datetime>,
+            github: Option<String>, */
+            // need to get data from frontmatter md
+            // Right?
+            // need to rethink the structure of the ssg
+            // get style -> get templates ->
+            // extract frontmatter -> put frontmatter data into templ ->
+            // put content into templ -> render full html
+            //
+            // go back to drawing board for creating dirs in ./public
+            // we are not immediately sending out the html after we convert
+
+            let rendered = tpl.render(&Frontmatter {
+                title: "Same".to_string(),
+                style: "same".to_string(),
+                overide_main_style: None,
+                description: None,
+                author: None,
+                date: None,
+                github: None,
+            });
+        }
+    }
 }
