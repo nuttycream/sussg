@@ -1,7 +1,5 @@
-pub mod build;
+pub mod cmd;
 pub mod convert;
-pub mod init;
-pub mod serve;
 pub mod toml_stuff;
 
 use clap::{Parser, Subcommand};
@@ -26,8 +24,8 @@ fn main() {
     let args = Args::parse();
 
     match &args.command {
-        Commands::Init => init::init(),
-        Commands::Build => build::build(),
-        Commands::Serve => serve::serve(),
+        Commands::Init => cmd::init::init(),
+        Commands::Build => cmd::build::build(),
+        Commands::Serve => cmd::serve::serve(),
     }
 }
