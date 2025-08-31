@@ -7,8 +7,6 @@ use tower_livereload::LiveReloadLayer;
 pub async fn serve() {
     let static_files = ServeDir::new("./public");
 
-    // todo: cannot use "/" to server static files
-    // need workaround
     let app = Router::new()
         .fallback_service(static_files)
         .layer(LiveReloadLayer::new());
