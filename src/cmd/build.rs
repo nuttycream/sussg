@@ -14,17 +14,18 @@ struct Style {
     path: PathBuf,
 }
 
-#[derive(Default, Debug)]
+#[derive(Default, Debug, Clone)]
 struct Mustache {
     name: String,
     path: PathBuf,
 }
 
+#[derive(Debug)]
 struct TheThing {
     name: String,
     path: PathBuf,
     styles: Vec<Style>,
-    mustaches: Vec<Mustache>,
+    mustache: Mustache,
     content: String,
 }
 
@@ -107,10 +108,18 @@ pub fn build() {
 
             let mut thing_styles = Vec::new();
             if let Some(styles_strings) = frontmatter.styles {
-                println!("style_strings:{:?}", styles_strings);
                 for style in &styles {
                     if styles_strings.contains(&style.name) {
                         thing_styles.push(style.clone());
+                    }
+                }
+            }
+
+            let mut thing_mustache = Mustache::default();
+            if let Some(mustache) = frontmatter.template {
+                for avail_mustache in &mustaches {
+                    if avail_mustache.name == mustache {
+                        thing_mustache = avail_mustache.clone();
                     }
                 }
             }
@@ -126,7 +135,7 @@ pub fn build() {
                 path: path.to_path_buf(),
                 content,
                 styles: thing_styles,
-                mustaches: Vec::new(),
+                mustache: thing_mustache,
             };
 
             let relative_path = path.strip_prefix("./content").unwrap();
