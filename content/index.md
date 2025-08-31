@@ -1,6 +1,6 @@
 ```toml
 title = "sdadsa"
-style = "main"
+styles = ["main"]
 ```
 
 # Testes

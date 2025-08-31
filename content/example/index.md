@@ -1,6 +1,6 @@
 ```toml
 title = "test"
-style = "test"
+styles = ["test", "main"]
 ```
 
 # nested example
