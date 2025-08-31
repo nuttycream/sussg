@@ -4,8 +4,6 @@ pub mod toml_stuff;
 
 use clap::{Parser, Subcommand};
 
-use crate::convert::convert;
-
 #[derive(Parser, Debug)]
 #[command(version, about, long_about = None)]
 struct Args {

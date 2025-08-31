@@ -1,14 +1,18 @@
 use pulldown_cmark_frontmatter::FrontmatterExtractor;
 
-pub fn convert(md_string: String, styles: Vec<String>) -> String {
+pub fn convert(md_string: String, styles: Vec<String>) -> (String, String) {
     let mut extractor = FrontmatterExtractor::new(pulldown_cmark::Parser::new(&md_string));
     let mut html_output = String::new();
     pulldown_cmark::html::push_html(&mut html_output, &mut extractor);
 
     let frontmatter = extractor.frontmatter.expect("no frontmatter detected");
-    let code_block = frontmatter.code_block.expect("code block not detected");
+    let code_block = frontmatter
+        .code_block
+        .expect("code block not detected")
+        .source
+        .to_string();
 
-    println!("{}", code_block.source.clone().into_string());
+    println!("{}", code_block);
 
     // code_block.source.into_string()
 
@@ -18,5 +22,5 @@ pub fn convert(md_string: String, styles: Vec<String>) -> String {
     }
 
     html_output = link + &html_output;
-    html_output
+    (code_block, html_output)
 }
