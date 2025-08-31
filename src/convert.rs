@@ -1,7 +1,7 @@
 use pulldown_cmark_frontmatter::FrontmatterExtractor;
 
-pub fn convert(md_string: &String) -> (String, String) {
-    let mut extractor = FrontmatterExtractor::new(pulldown_cmark::Parser::new(&md_string));
+pub fn convert(md_string: &str) -> (String, String) {
+    let mut extractor = FrontmatterExtractor::new(pulldown_cmark::Parser::new(md_string));
     let mut html_output = String::new();
     pulldown_cmark::html::push_html(&mut html_output, &mut extractor);
 
@@ -12,7 +12,7 @@ pub fn convert(md_string: &String) -> (String, String) {
         .source
         .to_string();
 
-    println!("{}", code_block);
+    //println!("{}", code_block);
 
     // code_block.source.into_string()
 
