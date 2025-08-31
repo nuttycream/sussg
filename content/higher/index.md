@@ -1,6 +1,6 @@
 ```toml
-name = "test"
-style = "test"
+title = "test higher"
+style = "test higher style"
 ```
 
 # test higher

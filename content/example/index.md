@@ -1,5 +1,5 @@
 ```toml
-name = "test"
+title = "test"
 style = "test"
 ```
 

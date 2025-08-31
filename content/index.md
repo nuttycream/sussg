@@ -1,5 +1,5 @@
 ```toml
-name = "sdadsa"
+title = "sdadsa"
 style = "main"
 ```
 
