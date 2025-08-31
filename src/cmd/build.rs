@@ -6,9 +6,9 @@ use std::{
 
 use walkdir::WalkDir;
 
-use crate::convert::convert;
+use crate::{convert::convert, toml_stuff::Frontmatter};
 
-#[derive(Default)]
+#[derive(Default, Debug, Clone)]
 struct Style {
     name: String,
     path: PathBuf,
@@ -48,9 +48,8 @@ pub fn build() {
         if style_file.path().extension() == Some(OsStr::new("css")) {
             let mut style = Style::default();
             let path = style_file.path();
-            style.name = path.file_name().unwrap().to_str().unwrap().to_string();
+            style.name = path.file_prefix().unwrap().to_str().unwrap().to_string();
             style.path = path.strip_prefix("./styles").unwrap().to_path_buf();
-            println!("{:?}", style.path);
 
             styles.push(style);
 
@@ -76,7 +75,7 @@ pub fn build() {
         if yea || oh {
             let name = template_file
                 .path()
-                .file_name()
+                .file_prefix()
                 .unwrap()
                 .to_str()
                 .unwrap()
@@ -89,24 +88,52 @@ pub fn build() {
         }
     }
 
+    println!("avail_styles:{:?}", styles);
+    println!("avail_templs{:?}", mustaches);
     for content in WalkDir::new("./content").into_iter().filter_map(|e| e.ok()) {
         if content.path().extension() == Some(OsStr::new("md")) {
             let path = content.path();
             let name = path.file_name().unwrap().to_str().unwrap().to_string();
             let md_string = fs::read_to_string(path).unwrap();
 
+            println!("processing:{}", name);
+
+            let (frontmatter_string, content) = convert(&md_string);
+
+            let frontmatter: Frontmatter = toml::from_str(&frontmatter_string)
+                .expect("could not convert frontmatter to struct");
+
+            //println!("{:?}", frontmatter);
+
+            let mut thing_styles = Vec::new();
+            if let Some(styles_strings) = frontmatter.styles {
+                println!("style_strings:{:?}", styles_strings);
+                for style in &styles {
+                    if styles_strings.contains(&style.name) {
+                        thing_styles.push(style.clone());
+                    }
+                }
+            }
+
+            println!("loaded_styles:{:?}", thing_styles);
+
+            // thing is only used when building
+            // so we can pragmatically store what we need
+            // to build that file out
+            // methinks :shrug:
             let thing = TheThing {
                 name,
                 path: path.to_path_buf(),
-                content: md_string,
-                styles: Vec::new(),
+                content,
+                styles: thing_styles,
                 mustaches: Vec::new(),
             };
 
             let relative_path = path.strip_prefix("./content").unwrap();
+
+            println!("\n");
         }
     }
-    println!("{:?}", mustaches);
 
     // Frontmatter
     /*
@@ -135,4 +162,10 @@ pub fn build() {
     */
 
     // once we have all the styles loaded
+    /*
+    let mut link = String::new();
+    for style in styles {
+        link.push_str(&format!("<link rel=\"stylesheet\" href=\"{}\">\n", style));
+    }
+    */
 }
