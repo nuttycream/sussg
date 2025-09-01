@@ -1,7 +1,6 @@
-use ramhorns::Content;
 use serde::{Deserialize, Serialize};
 
-#[derive(Debug, Content, Deserialize, Serialize)]
+#[derive(Debug, Deserialize, Serialize)]
 pub struct Frontmatter {
     pub title: String,
 

@@ -4,6 +4,7 @@ use std::{
     path::{Path, PathBuf},
 };
 
+use ramhorns::{Content, Template};
 use walkdir::WalkDir;
 
 use crate::{convert::convert, toml_stuff::Frontmatter};
@@ -26,6 +27,12 @@ struct TheThing {
     path: PathBuf,
     styles: Vec<Style>,
     mustache: Mustache,
+    content: String,
+}
+
+#[derive(Content)]
+struct RenderedContent {
+    title: String,
     content: String,
 }
 
@@ -90,7 +97,7 @@ pub fn build() {
     }
 
     println!("avail_styles:{:?}", styles);
-    println!("avail_templs{:?}", mustaches);
+    println!("avail_templs:{:?}", mustaches);
     for content in WalkDir::new("./content").into_iter().filter_map(|e| e.ok()) {
         if content.path().extension() == Some(OsStr::new("md")) {
             let path = content.path();
@@ -115,8 +122,14 @@ pub fn build() {
                 }
             }
 
-            let mut thing_mustache = Mustache::default();
+            // todo get this from mustache bro
+            let mut thing_mustache = Mustache {
+                name: "main".to_string(),
+                path: Path::new("./templates/base.html").to_path_buf(),
+            };
+
             if let Some(mustache) = frontmatter.template {
+                println!("{:?}", mustache);
                 for avail_mustache in &mustaches {
                     if avail_mustache.name == mustache {
                         thing_mustache = avail_mustache.clone();
@@ -125,6 +138,7 @@ pub fn build() {
             }
 
             println!("loaded_styles:{:?}", thing_styles);
+            println!("loaded_templ:{:?}", thing_mustache);
 
             // thing is only used when building
             // so we can pragmatically store what we need
@@ -138,6 +152,18 @@ pub fn build() {
                 mustache: thing_mustache,
             };
 
+            // now build out the html
+            let source = fs::read_to_string(thing.mustache.path).expect("mustache path is invalid");
+            let tpl = Template::new(source).unwrap();
+
+            let rendered = tpl.render(&RenderedContent {
+                title: frontmatter.title,
+                content: thing.content,
+            });
+
+            println!("{}", rendered);
+
+            // this is for outputting the html
             let relative_path = path.strip_prefix("./content").unwrap();
 
             println!("\n");
