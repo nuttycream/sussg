@@ -1,6 +1,7 @@
 use std::{
     ffi::OsStr,
     fs::{self},
+    ops::{Index, IndexMut},
     path::{Path, PathBuf},
 };
 
@@ -12,19 +13,19 @@ use crate::{convert::convert, toml_stuff::Frontmatter};
 #[derive(Default, Debug, Clone)]
 struct Style {
     name: String,
-    path: PathBuf,
+    path: String,
 }
 
 #[derive(Default, Debug, Clone)]
 struct Mustache {
     name: String,
-    path: PathBuf,
+    path: String,
 }
 
 #[derive(Debug)]
 struct TheThing {
     name: String,
-    path: PathBuf,
+    path: String,
     styles: Vec<Style>,
     mustache: Mustache,
     content: String,
@@ -57,7 +58,12 @@ pub fn build() {
             let mut style = Style::default();
             let path = style_file.path();
             style.name = path.file_prefix().unwrap().to_str().unwrap().to_string();
-            style.path = path.strip_prefix("./styles").unwrap().to_path_buf();
+            style.path = path
+                .strip_prefix("./styles")
+                .unwrap()
+                .to_str()
+                .unwrap()
+                .to_string();
 
             styles.push(style);
 
@@ -91,7 +97,7 @@ pub fn build() {
 
             mustaches.push(Mustache {
                 name,
-                path: template_file.path().to_path_buf(),
+                path: template_file.path().to_str().unwrap().to_string(),
             });
         }
     }
@@ -125,7 +131,7 @@ pub fn build() {
             // todo get this from mustache bro
             let mut thing_mustache = Mustache {
                 name: "main".to_string(),
-                path: Path::new("./templates/base.html").to_path_buf(),
+                path: "./templates/base.html".to_string(),
             };
 
             if let Some(mustache) = frontmatter.template {
@@ -140,31 +146,53 @@ pub fn build() {
             println!("loaded_styles:{:?}", thing_styles);
             println!("loaded_templ:{:?}", thing_mustache);
 
+            let relative_path = path.strip_prefix("./content").unwrap();
+            let count = relative_path.components().count();
+            let redirect_path = if count <= 1 {
+                "./"
+            } else {
+                &format!("{}/", "..".repeat(count - 1))
+            };
+
             // thing is only used when building
             // so we can pragmatically store what we need
             // to build that file out
             // methinks :shrug:
-            let thing = TheThing {
+            let mut thing = TheThing {
                 name,
-                path: path.to_path_buf(),
+                path: path.to_str().unwrap().to_string(),
                 content,
                 styles: thing_styles,
                 mustache: thing_mustache,
             };
 
+            (0..thing.styles.len()).for_each(|n| {
+                thing.styles.index_mut(n).path =
+                    format!("{}{}", redirect_path, thing.styles.index(n).path);
+            });
+
             // now build out the html
             let source = fs::read_to_string(thing.mustache.path).expect("mustache path is invalid");
             let tpl = Template::new(source).unwrap();
 
-            let rendered = tpl.render(&RenderedContent {
+            let mut rendered = tpl.render(&RenderedContent {
                 title: frontmatter.title,
                 content: thing.content,
             });
 
+            let mut link = String::new();
+            for style in thing.styles {
+                link.push_str(&format!(
+                    "<link rel=\"stylesheet\" href=\"{}\">\n",
+                    style.path
+                ));
+            }
+
+            rendered = link + &rendered;
+
             println!("{}", rendered);
 
             // this is for outputting the html
-            let relative_path = path.strip_prefix("./content").unwrap();
 
             println!("\n");
         }
