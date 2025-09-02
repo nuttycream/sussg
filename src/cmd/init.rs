@@ -26,9 +26,9 @@ pub fn init() {
 
     println!(
         "
-finished initializing ssssg start creating your markdown
+finished initializing sussg start creating your markdown
 content in the content folder, css goes into the styles folder,
-then run 'ssssg serve' to preview locally.
+then run 'sussg serve' to preview locally.
     "
     );
 }
