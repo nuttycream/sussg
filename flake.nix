@@ -34,14 +34,14 @@
             name = "sussg";
             packages = with pkgs; [
               just
+              rust-bin.stable.latest.minimal
+              rust-analyzer
+              rustfmt
             ];
 
             buildInputs = [
               openssl
               pkg-config
-              rust-bin.stable.latest.minimal
-              rust-analyzer
-              rustfmt
             ];
           };
         }
