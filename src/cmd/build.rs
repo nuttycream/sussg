@@ -190,11 +190,15 @@ pub fn build() {
 
             rendered = link + &rendered;
 
-            println!("{}", rendered);
+            println!("{}\n", rendered);
+            let out = Path::new("./public")
+                .join(relative_path)
+                .with_extension("html");
 
-            // this is for outputting the html
+            fs::create_dir_all(out.parent().unwrap()).unwrap();
 
-            println!("\n");
+            fs::write(&out, rendered).unwrap();
+            println!("created: {}", out.display());
         }
     }
 
