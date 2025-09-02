@@ -57,7 +57,12 @@ pub fn build() {
         if style_file.path().extension() == Some(OsStr::new("css")) {
             let mut style = Style::default();
             let path = style_file.path();
-            style.name = path.file_prefix().unwrap().to_str().unwrap().to_string();
+            style.name = path
+                .file_name()
+                .and_then(OsStr::to_str)
+                .map_or(false, |name| name.ends_with(".css"))
+                .to_string();
+
             style.path = path
                 .strip_prefix("./styles")
                 .unwrap()
@@ -89,10 +94,11 @@ pub fn build() {
         if yea || oh {
             let name = template_file
                 .path()
-                .file_prefix()
-                .unwrap()
-                .to_str()
-                .unwrap()
+                .file_name()
+                .and_then(OsStr::to_str)
+                .map_or(false, |name| {
+                    name.ends_with(".html") || name.ends_with(".moustache")
+                })
                 .to_string();
 
             mustaches.push(Mustache {
@@ -202,38 +208,4 @@ pub fn build() {
             println!("created: {}", out.display());
         }
     }
-
-    // Frontmatter
-    /*
-    let source = fs::read_to_string(template_file.path()).unwrap();
-    let tpl = ramhorns::Template::new(source).unwrap();
-
-    // need to get data from frontmatter md
-    // Right?
-    // need to rethink the structure of the ssg
-    // get style -> get templates ->
-    // extract frontmatter -> put frontmatter data into templ ->
-    // put content into templ -> render full html
-    //
-    // go back to drawing board for creating dirs in ./public
-    // we are not immediately sending out the html after we convert
-
-    let rendered = tpl.render(&Frontmatter {
-        title: "Same".to_string(),
-        style: "same".to_string(),
-        overide_main_style: None,
-        description: None,
-        author: None,
-        date: None,
-        github: None,
-    });
-    */
-
-    // once we have all the styles loaded
-    /*
-    let mut link = String::new();
-    for style in styles {
-        link.push_str(&format!("<link rel=\"stylesheet\" href=\"{}\">\n", style));
-    }
-    */
 }
