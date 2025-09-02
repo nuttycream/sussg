@@ -146,6 +146,7 @@ pub fn build() {
             println!("loaded_styles:{:?}", thing_styles);
             println!("loaded_templ:{:?}", thing_mustache);
 
+            // HOLY FUCK LMAO
             let relative_path = path.strip_prefix("./content").unwrap();
             let count = relative_path.components().count();
             let redirect_path = if count <= 1 {
