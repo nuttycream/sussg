@@ -1,6 +1,6 @@
 ```toml
 title = "test higher"
-styles = ["test higher style", "test2"]
+styles = ["test higher style", "test2", "dark"]
 ```
 
 # test higher
