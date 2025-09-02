@@ -1,11 +1,46 @@
 # sussg
 
 **sussg** (pronounced sus-gee like Sasuke (the guy who commited fratricide in
-that one Japanese Animation))
+that one Japanese Animation)) is a super ultimate static site generator that is
+honestly just a wrapper for `pulldown-cmark` and `ramhorns`. If you want a
+better generator, please use [Zola](https://www.getzola.org).
 
-is a super ultimate static site generator that is honestly just a wrapper for
-`pulldown-cmark` and `ramhorns`. If you want a better generator, please use
-[Zola](https://www.getzola.org).
+If you're still here, then this is a no frills/barebones static site generator.
+While other SSG's tout bloated features like cdn support, image processing,
+taxonomies, and decent programming. Realistically, you don't need all that and
+let's be honest, there's not gonna be that many people visiting your site. Well
+then why not just build out your entire site in raw html? You might ask, which
+I'll reply with: good question, because well uhhh
 
-If you're still here, then this is a no frills/barebones static site generator
-that converts your Markdown content and injects them into `mustache` templates.
+## Features
+
+- Simple
+- Fast
+
+## Installation
+
+- If you're on linux and use nixpkgs, then you're in luck! It's the only
+  platform I support
+- Just add this repo to your `inputs` like so:
+
+```nix
+inputs = {
+  ssusg.url = "github:nuttycream/sussg"
+};
+
+outputs = {
+  sussg,
+  ...
+}: 
+...
+```
+
+- Then add the package to your shell:
+
+```nix
+packages = [
+  sussg.packages.${system}.default
+];
+```
+
+- `sussg` should now be available in your shell.
