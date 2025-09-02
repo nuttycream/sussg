@@ -1,5 +1,5 @@
 {
-  description = "Rust Development Shell";
+  description = "sussg";
 
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
@@ -22,7 +22,16 @@
         };
       in
         with pkgs; {
+          packages.default = pkgs.rustPlatform.buildRustPackage {
+            name = "sussg";
+            src = ./.;
+            buildInputs = [];
+            nativeBuildInputs = [];
+            cargoHash = "sha256-29YoAxN8pjUhz4UJBlMkHWm2Fa1rFKQKkjMsXRdvvJU=";
+          };
+
           devShells.default = mkShell {
+            name = "sussg";
             packages = with pkgs; [
               just
             ];
@@ -30,15 +39,9 @@
             buildInputs = [
               openssl
               pkg-config
-              (
-                rust-bin.selectLatestNightlyWith (toolchain:
-                  toolchain.default.override {
-                    extensions = [
-                      "rust-src"
-                      "rust-analyzer"
-                    ];
-                  })
-              )
+              rust-bin.stable.latest.minimal
+              rust-analyzer
+              rustfmt
             ];
           };
         }
