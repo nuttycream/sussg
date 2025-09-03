@@ -7,6 +7,8 @@ use tower_livereload::LiveReloadLayer;
 pub async fn serve() {
     let static_files = ServeDir::new("./public");
 
+    crate::cmd::build::build();
+
     let app = Router::new()
         .fallback_service(static_files)
         .layer(LiveReloadLayer::new());
