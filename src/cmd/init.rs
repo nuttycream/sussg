@@ -24,7 +24,7 @@ pub fn init() {
         Err(e) => println!("failed to create ./static: {e}"),
     };
 
-    File::create("Config.toml")
+    File::create("config.toml")
         .and_then(|mut file| file.write_all("test4testes".as_bytes()))
         .map(|_| println!("config created successfully"))
         .unwrap_or_else(|e| println!("failed to create config: {e}"));

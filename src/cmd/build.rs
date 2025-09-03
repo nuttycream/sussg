@@ -1,16 +1,14 @@
 use std::{
     ffi::OsStr,
     fs::{self},
-    io,
     ops::{Index, IndexMut},
-    os::linux::raw::stat,
     path::Path,
 };
 
 use ramhorns::{Content, Template};
 use walkdir::WalkDir;
 
-use crate::{convert::convert, toml_stuff::Frontmatter};
+use crate::{config::Frontmatter, convert::convert};
 
 #[derive(Default, Debug, Clone)]
 struct Style {

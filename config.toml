@@ -1,0 +1,3 @@
+[general]
+url = "www.some.com"
+output_dir = "public"

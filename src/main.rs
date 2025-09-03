@@ -1,6 +1,6 @@
 pub mod cmd;
+pub mod config;
 pub mod convert;
-pub mod toml_stuff;
 
 use clap::{Parser, Subcommand};
 
