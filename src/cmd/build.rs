@@ -22,6 +22,17 @@ struct Mustache {
     path: String,
 }
 
+// todo move this
+// in fact this whole fuckign
+// file needs a refactor
+#[derive(Content)]
+struct RenderedContent {
+    title: String,
+    content: String,
+}
+
+// Can be anything, a post,
+// a page, a SR-71 BlackBird
 #[derive(Debug)]
 struct TheThing {
     name: String,
@@ -31,10 +42,11 @@ struct TheThing {
     content: String,
 }
 
-#[derive(Content)]
-struct RenderedContent {
-    title: String,
-    content: String,
+// gonna use this as a global thing
+// to manage posts ya?
+struct BiggerThing {
+    posts: Vec<TheThing>,
+    pages: Vec<TheThing>,
 }
 
 pub fn build() {
@@ -51,6 +63,11 @@ pub fn build() {
         }
         Err(e) => println!("failed to somehow check if public exists: {e}"),
     }
+
+    let bigger_thing = BiggerThing {
+        posts: Vec::new(),
+        pages: Vec::new(),
+    };
 
     // maybe add some optimizations to images here? hmmmm?
     for static_file in WalkDir::new("./static").into_iter().filter_map(|e| e.ok()) {
@@ -80,6 +97,7 @@ pub fn build() {
                 .unwrap_or("")
                 .to_string();
 
+            // should i be strippin dis?
             style.path = path
                 .strip_prefix("./styles")
                 .unwrap()
@@ -132,7 +150,9 @@ pub fn build() {
     println!("avail_styles:{:?}", styles);
     println!("avail_templs:{:?}", mustaches);
     for content in WalkDir::new("./content").into_iter().filter_map(|e| e.ok()) {
-        if content.path().extension() == Some(OsStr::new("md")) {
+        if content.path().starts_with("posts") {
+            if content.file_type().is_dir() {}
+        } else if content.path().extension() == Some(OsStr::new("md")) {
             let path = content.path();
             let name = path.file_name().unwrap().to_str().unwrap().to_string();
             let md_string = fs::read_to_string(path).unwrap();
