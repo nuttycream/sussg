@@ -19,6 +19,11 @@ pub fn init() {
         Err(e) => println!("failed to create ./templates: {e}"),
     };
 
+    match fs::create_dir("static") {
+        Ok(_) => println!("./static created successfully"),
+        Err(e) => println!("failed to create ./static: {e}"),
+    };
+
     File::create("Config.toml")
         .and_then(|mut file| file.write_all("test4testes".as_bytes()))
         .map(|_| println!("config created successfully"))
@@ -28,6 +33,7 @@ pub fn init() {
         "
 finished initializing sussg start creating your markdown
 content in the content folder, css goes into the styles folder,
+static files such as images/pdfs/etc go in static
 then run 'sussg serve' to preview locally.
     "
     );
