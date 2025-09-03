@@ -1,8 +1,10 @@
 use std::{
     ffi::OsStr,
     fs::{self},
+    io,
     ops::{Index, IndexMut},
-    path::{Path, PathBuf},
+    os::linux::raw::stat,
+    path::Path,
 };
 
 use ramhorns::{Content, Template};
@@ -50,6 +52,21 @@ pub fn build() {
             }
         }
         Err(e) => println!("failed to somehow check if public exists: {e}"),
+    }
+
+    // maybe add some optimizations to images here? hmmmm?
+    for static_file in WalkDir::new("./static").into_iter().filter_map(|e| e.ok()) {
+        let from = static_file.path();
+        let to = Path::new("./public").join(from.strip_prefix("./static").unwrap());
+
+        if static_file.file_type().is_dir() {
+            match fs::create_dir(to) {
+                Ok(_) => {}
+                Err(e) => println!("failed to create_dir {e}"),
+            }
+        } else if static_file.file_type().is_file() {
+            fs::copy(from, to).unwrap();
+        }
     }
 
     let mut styles = Vec::new();
@@ -141,15 +158,16 @@ pub fn build() {
             }
 
             // todo get this from mustache bro
-            let mut thing_mustache = Mustache {
-                name: "main".to_string(),
-                path: "./templates/base.html".to_string(),
-            };
+            let mut thing_mustache = mustaches
+                .iter()
+                .find(|m| m.name == "base")
+                .cloned()
+                .unwrap();
 
-            if let Some(mustache) = frontmatter.template {
-                println!("{:?}", mustache);
+            if let Some(mustache_name) = frontmatter.template {
+                println!("{:?}", mustache_name);
                 for avail_mustache in &mustaches {
-                    if avail_mustache.name == mustache {
+                    if avail_mustache.name == mustache_name {
                         thing_mustache = avail_mustache.clone();
                     }
                 }
