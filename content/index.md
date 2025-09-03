@@ -1,6 +1,6 @@
-```toml
-title = "sdadsa"
-styles = ["main", "dark"]
-```
+---
+title: sdadsa
+styles: 0
+---
 
 # Testes
