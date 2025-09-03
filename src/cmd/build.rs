@@ -60,7 +60,9 @@ pub fn build() {
             style.name = path
                 .file_name()
                 .and_then(OsStr::to_str)
-                .map_or(false, |name| name.ends_with(".css"))
+                .filter(|name| name.ends_with(".css"))
+                .and_then(|name| name.strip_suffix(".css"))
+                .unwrap_or("")
                 .to_string();
 
             style.path = path
@@ -96,9 +98,13 @@ pub fn build() {
                 .path()
                 .file_name()
                 .and_then(OsStr::to_str)
-                .map_or(false, |name| {
-                    name.ends_with(".html") || name.ends_with(".moustache")
+                .filter(|name| name.ends_with(".html") || name.ends_with(".moustache"))
+                .map(|name| {
+                    name.strip_suffix(".html")
+                        .or_else(|| name.strip_suffix(".mustache"))
+                        .unwrap_or(name)
                 })
+                .unwrap_or("")
                 .to_string();
 
             mustaches.push(Mustache {
