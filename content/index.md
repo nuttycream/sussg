@@ -1,6 +1,6 @@
 ---
 title: sdadsa
-styles: 0
+styles: ['main']
 ---
 
 # Testes
