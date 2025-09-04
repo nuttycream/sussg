@@ -157,11 +157,11 @@ pub fn build() {
             let name = path.file_name().unwrap().to_str().unwrap().to_string();
             let md_string = fs::read_to_string(path).unwrap();
 
-            println!("processing:{}", name);
+            println!("processing:{}", path.display());
 
             let (frontmatter_string, content) = convert(&md_string);
 
-            let frontmatter: Frontmatter = toml::from_str(&frontmatter_string)
+            let frontmatter: Frontmatter = serde_yaml::from_str(&frontmatter_string)
                 .expect("could not convert frontmatter to struct");
 
             //println!("{:?}", frontmatter);

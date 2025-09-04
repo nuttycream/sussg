@@ -1,3 +1,3 @@
-```toml
-title = "post_1"
-```
+---
+title: post 1
+---
