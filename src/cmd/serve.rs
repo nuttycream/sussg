@@ -24,9 +24,17 @@ pub async fn serve() {
     )
     .unwrap();
 
-    watcher
-        .watch(Path::new("content"), RecursiveMode::Recursive)
-        .unwrap();
+    let mut watch_these = watcher.paths_mut();
+    let paths: Vec<&Path> = vec![
+        Path::new("content"),
+        Path::new("styles"),
+        Path::new("static"),
+        Path::new("templates"),
+    ];
+
+    for path in paths {
+        watch_these.add(path, RecursiveMode::Recursive).unwrap();
+    }
 
     let static_files = ServeDir::new("./public");
 
