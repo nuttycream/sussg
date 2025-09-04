@@ -239,7 +239,7 @@ pub fn build() {
 
             rendered = link + &rendered;
 
-            println!("{}\n", rendered);
+            //println!("{}\n", rendered);
             let out = Path::new("./public")
                 .join(relative_path)
                 .with_extension("html");

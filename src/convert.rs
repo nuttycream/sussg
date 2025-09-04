@@ -1,7 +1,5 @@
 use pulldown_cmark::{Event, MetadataBlockKind, Options, Tag, TagEnd};
 
-use crate::config::Frontmatter;
-
 pub fn convert(md_string: &str) -> (String, String) {
     let mut options = Options::empty();
     options.insert(Options::ENABLE_YAML_STYLE_METADATA_BLOCKS);
@@ -30,7 +28,7 @@ pub fn convert(md_string: &str) -> (String, String) {
 
     let mut html_output = String::new();
     pulldown_cmark::html::push_html(&mut html_output, parser);
-    println!("{html_output}");
+    //println!("{html_output}");
 
     (frontmatter, html_output)
 }
