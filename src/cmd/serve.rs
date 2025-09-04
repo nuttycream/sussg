@@ -1,17 +1,40 @@
+use std::path::Path;
+
 use axum::Router;
+use notify::{Error, Event, RecommendedWatcher, RecursiveMode, Watcher};
 use tokio::signal;
 use tower_http::services::ServeDir;
 use tower_livereload::LiveReloadLayer;
 
 #[tokio::main]
 pub async fn serve() {
+    let livereload = LiveReloadLayer::new();
+    let reloader = livereload.reloader();
+
+    let mut watcher = RecommendedWatcher::new(
+        move |result: Result<Event, Error>| {
+            let event = result.unwrap();
+
+            if event.kind.is_modify() {
+                crate::cmd::build::build();
+                reloader.reload();
+            }
+        },
+        notify::Config::default(),
+    )
+    .unwrap();
+
+    watcher
+        .watch(Path::new("content"), RecursiveMode::Recursive)
+        .unwrap();
+
     let static_files = ServeDir::new("./public");
 
     crate::cmd::build::build();
 
     let app = Router::new()
         .fallback_service(static_files)
-        .layer(LiveReloadLayer::new());
+        .layer(livereload);
 
     let listener = tokio::net::TcpListener::bind("127.0.0.1:3030")
         .await
