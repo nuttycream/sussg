@@ -1,3 +1,5 @@
+<img src="https://raw.githubusercontent.com/nuttycream/sussg/main/sussg.svg?sanitize=true" alt="sussy baka" width="250" align="right">
+
 # sussg
 
 **sussg** (pronounced sus-gee like Sasuke (the guy who commited fratricide in
