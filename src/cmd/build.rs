@@ -161,95 +161,93 @@ pub fn build() {
 
             let (frontmatter_string, content) = convert(&md_string);
 
-            /*
-                let frontmatter: Frontmatter = toml::from_str(&frontmatter_string)
-                    .expect("could not convert frontmatter to struct");
+            let frontmatter: Frontmatter = serde_yaml::from_str(&frontmatter_string)
+                .expect("could not convert frontmatter to struct");
 
-                //println!("{:?}", frontmatter);
+            //println!("{:?}", frontmatter);
 
-                let mut thing_styles = Vec::new();
-                if let Some(styles_strings) = frontmatter.styles {
-                    for style in &styles {
-                        if styles_strings.contains(&style.name) {
-                            thing_styles.push(style.clone());
-                        }
+            let mut thing_styles = Vec::new();
+            if let Some(styles_strings) = frontmatter.styles {
+                for style in &styles {
+                    if styles_strings.contains(&style.name) {
+                        thing_styles.push(style.clone());
                     }
                 }
+            }
 
-                // todo get this from mustache bro
-                let mut thing_mustache = mustaches
-                    .iter()
-                    .find(|m| m.name == "base")
-                    .cloned()
-                    .unwrap();
+            // todo get this from mustache bro
+            let mut thing_mustache = mustaches
+                .iter()
+                .find(|m| m.name == "base")
+                .cloned()
+                .unwrap();
 
-                if let Some(mustache_name) = frontmatter.template {
-                    println!("{:?}", mustache_name);
-                    for avail_mustache in &mustaches {
-                        if avail_mustache.name == mustache_name {
-                            thing_mustache = avail_mustache.clone();
-                        }
+            if let Some(mustache_name) = frontmatter.template {
+                println!("{:?}", mustache_name);
+                for avail_mustache in &mustaches {
+                    if avail_mustache.name == mustache_name {
+                        thing_mustache = avail_mustache.clone();
                     }
                 }
+            }
 
-                println!("loaded_styles:{:?}", thing_styles);
-                println!("loaded_templ:{:?}", thing_mustache);
+            println!("loaded_styles:{:?}", thing_styles);
+            println!("loaded_templ:{:?}", thing_mustache);
 
-                // HOLY FUCK LMAO
-                let relative_path = path.strip_prefix("./content").unwrap();
-                let count = relative_path.components().count();
-                let redirect_path = if count <= 1 {
-                    "./"
-                } else {
-                    &format!("{}/", "..".repeat(count - 1))
-                };
+            // HOLY FUCK LMAO
+            let relative_path = path.strip_prefix("./content").unwrap();
+            let count = relative_path.components().count();
+            let redirect_path = if count <= 1 {
+                "./"
+            } else {
+                &format!("{}/", "..".repeat(count - 1))
+            };
 
-                // thing is only used when building
-                // so we can pragmatically store what we need
-                // to build that file out
-                // methinks :shrug:
-                let mut thing = TheThing {
-                    name,
-                    path: path.to_str().unwrap().to_string(),
-                    content,
-                    styles: thing_styles,
-                    mustache: thing_mustache,
-                };
+            // thing is only used when building
+            // so we can pragmatically store what we need
+            // to build that file out
+            // methinks :shrug:
+            let mut thing = TheThing {
+                name,
+                path: path.to_str().unwrap().to_string(),
+                content,
+                styles: thing_styles,
+                mustache: thing_mustache,
+            };
 
-                (0..thing.styles.len()).for_each(|n| {
-                    thing.styles.index_mut(n).path =
-                        format!("{}{}", redirect_path, thing.styles.index(n).path);
-                });
+            (0..thing.styles.len()).for_each(|n| {
+                thing.styles.index_mut(n).path =
+                    format!("{}{}", redirect_path, thing.styles.index(n).path);
+            });
 
-                // now build out the html
-                let source = fs::read_to_string(thing.mustache.path).expect("mustache path is invalid");
-                let tpl = Template::new(source).unwrap();
+            // now build out the html
+            let source = fs::read_to_string(thing.mustache.path).expect("mustache path is invalid");
+            let tpl = Template::new(source).unwrap();
 
-                let mut rendered = tpl.render(&RenderedContent {
-                    title: frontmatter.title,
-                    content: thing.content,
-                });
+            let mut rendered = tpl.render(&RenderedContent {
+                title: frontmatter.title,
+                content: thing.content,
+            });
 
-                let mut link = String::new();
-                for style in thing.styles {
-                    link.push_str(&format!(
-                        "<link rel=\"stylesheet\" href=\"{}\">\n",
-                        style.path
-                    ));
-                }
+            let mut link = String::new();
+            for style in thing.styles {
+                link.push_str(&format!(
+                    "<link rel=\"stylesheet\" href=\"{}\">\n",
+                    style.path
+                ));
+            }
 
-                rendered = link + &rendered;
+            rendered = link + &rendered;
 
-                println!("{}\n", rendered);
-                let out = Path::new("./public")
-                    .join(relative_path)
-                    .with_extension("html");
+            println!("{}\n", rendered);
+            let out = Path::new("./public")
+                .join(relative_path)
+                .with_extension("html");
 
-                fs::create_dir_all(out.parent().unwrap()).unwrap();
+            fs::create_dir_all(out.parent().unwrap()).unwrap();
 
-                fs::write(&out, rendered).unwrap();
-                println!("created: {}", out.display());
-            */
+            fs::write(&out, rendered).unwrap();
+            println!("created: {}", out.display());
         }
     }
 }
