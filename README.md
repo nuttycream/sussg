@@ -1,4 +1,4 @@
-<img src="https://raw.githubusercontent.com/nuttycream/sussg/main/sussg.svg?sanitize=true" alt="sussy baka" width="250" align="right">
+<img src="https://raw.githubusercontent.com/nuttycream/sussg/main/static/sussg.svg?sanitize=true" alt="sussy baka" width="250" align="right">
 
 # sussg
 
