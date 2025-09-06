@@ -1,6 +1,8 @@
 pub mod cmd;
 pub mod config;
 pub mod convert;
+pub mod errors;
+pub mod fs;
 
 use clap::{Parser, Subcommand};
 
