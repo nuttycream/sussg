@@ -38,13 +38,15 @@ pub fn build() -> Result<(), ErrDis> {
         Err(e) => return Err(ErrDis::BadContent(e.to_string())),
     };
 
-    println!("avail_styles:{:?}", styles);
+    //println!("avail_styles:{:?}", styles);
     //println!("avail_templs:{:?}", mustaches);
     //println!("content:{:?}", content);
 
     for thing in content {
         // this is where we'll start to populate
         // templates and then write them out to html
+
+        println!("creating:{}", thing.path.display());
 
         let tpl = match Template::new(thing.mustache.template) {
             Ok(t) => t,
@@ -63,7 +65,7 @@ pub fn build() -> Result<(), ErrDis> {
         let mut link = String::new();
         for style in &thing.styles {
             link.push_str(&format!(
-                "<link rel=\"stylesheet\" href=\"{}\">\n",
+                "<link rel=\"stylesheet\" href=\"/{}\">\n",
                 style.path.display()
             ));
         }

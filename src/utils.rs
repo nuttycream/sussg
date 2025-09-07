@@ -49,6 +49,10 @@ pub fn read_content(
 pub fn read_styles(styles_path: &Path) -> Result<Vec<Style>, ErrDis> {
     let mut styles = Vec::new();
     for style_file in WalkDir::new(styles_path).into_iter().filter_map(|e| e.ok()) {
+        if style_file.path().extension() != Some(OsStr::new("css")) {
+            continue;
+        }
+
         let mut style = Style::default();
         let path = style_file.path();
 
@@ -62,10 +66,22 @@ pub fn read_styles(styles_path: &Path) -> Result<Vec<Style>, ErrDis> {
             .unwrap_or("")
             .to_string();
 
+        println!("processing style:{}", path.display());
+
         style.path = path
             .strip_prefix("./styles")
             .expect("Somehow failed to strip_prefix for ./styles")
             .to_path_buf();
+
+        let out = Path::new("./public").join(&style.path);
+
+        fs::create_dir_all(
+            out.parent()
+                .expect("failed to get parent of current styles dir"),
+        )
+        .expect("somehow failed to create dir for styles");
+
+        fs::copy(path, &out).expect("somehow failed to copy the current style file");
 
         styles.push(style);
     }
@@ -83,6 +99,7 @@ pub fn read_templates(template_path: &Path) -> Result<Vec<Mustache>, ErrDis> {
         let yea = template_file.path().extension() == Some(OsStr::new("html"));
 
         if yea {
+            println!("processing templ:{}", template_file.path().display());
             let name = template_file
                 .path()
                 .file_name()
@@ -117,6 +134,8 @@ fn read_page(
         Ok((fm, c)) => (fm, c),
         Err(e) => return Err(ErrDis::BadMarkdown(e.to_string())),
     };
+
+    println!("processing page:{}", page_path.display());
 
     let path = page_path
         .strip_prefix("./content")
