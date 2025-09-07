@@ -81,19 +81,14 @@ pub fn read_templates(template_path: &Path) -> Result<Vec<Mustache>, ErrDis> {
         .filter_map(|e| e.ok())
     {
         let yea = template_file.path().extension() == Some(OsStr::new("html"));
-        let oh = template_file.path().extension() == Some(OsStr::new("moustache"));
 
-        if yea || oh {
+        if yea {
             let name = template_file
                 .path()
                 .file_name()
                 .and_then(OsStr::to_str)
-                .filter(|name| name.ends_with(".html") || name.ends_with(".moustache"))
-                .map(|name| {
-                    name.strip_suffix(".html")
-                        .or_else(|| name.strip_suffix(".mustache"))
-                        .unwrap_or(name)
-                })
+                .filter(|name| name.ends_with(".html"))
+                .map(|name| name.strip_suffix(".html").unwrap_or(name))
                 .unwrap_or("")
                 .to_string();
 
