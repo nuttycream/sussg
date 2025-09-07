@@ -1,6 +1,8 @@
 pub mod cmd;
 pub mod config;
 pub mod convert;
+pub mod errors;
+pub mod utils;
 
 use clap::{Parser, Subcommand};
 
@@ -23,7 +25,7 @@ fn main() {
 
     match &args.command {
         Commands::Init => cmd::init::init(),
-        Commands::Build => cmd::build::build(),
+        Commands::Build => cmd::build::build().unwrap(),
         Commands::Serve => cmd::serve::serve(),
     }
 }
