@@ -93,7 +93,7 @@ fn read_page(
     avail_styles: &Vec<Style>,
     avail_templs: &Vec<Mustache>,
 ) -> Result<TheThing, ErrDis> {
-    let (frontmatter, content) = match read_markdown(page_path) {
+    let (frontmatter, html_output) = match read_markdown(page_path) {
         Ok((fm, c)) => (fm, c),
         Err(e) => return Err(ErrDis::BadMarkdown(e.to_string())),
     };
@@ -137,7 +137,7 @@ fn read_page(
         path,
         styles,
         mustache,
-        content,
+        content: html_output,
     })
 }
 
@@ -147,11 +147,11 @@ fn read_markdown(path: &Path) -> Result<(Frontmatter, String), ErrDis> {
         Err(e) => return Err(ErrDis::BadMarkdownString(e.to_string())),
     };
 
-    let (frontmatter_string, content) = convert(&md_string);
+    let (frontmatter_string, html_output) = convert(&md_string);
     let frontmatter: Frontmatter = match serde_yaml::from_str(&frontmatter_string) {
         Ok(fm) => fm,
         Err(e) => return Err(ErrDis::BadFrontmatter(frontmatter_string, e.to_string())),
     };
 
-    Ok((frontmatter, content))
+    Ok((frontmatter, html_output))
 }
