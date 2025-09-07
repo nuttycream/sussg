@@ -25,7 +25,7 @@ fn main() {
 
     match &args.command {
         Commands::Init => cmd::init::init(),
-        Commands::Build => cmd::build::build(),
+        Commands::Build => cmd::build::build().unwrap(),
         Commands::Serve => cmd::serve::serve(),
     }
 }
