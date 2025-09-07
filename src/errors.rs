@@ -4,6 +4,9 @@ use std::error::Error;
 #[derive(Debug)]
 pub enum ErrDis {
     BadDirectory,
+    BadContent(String),
+    BadTemplates(String),
+    BadStyles(String),
     BadPage(String),
     BadMarkdown(String),
     BadMarkdownString(String),
@@ -17,6 +20,15 @@ impl fmt::Display for ErrDis {
         match self {
             ErrDis::BadDirectory => {
                 write!(f, "Bad Directory")
+            }
+            ErrDis::BadContent(e) => {
+                write!(f, "Failed to read content: {e}")
+            }
+            ErrDis::BadTemplates(e) => {
+                write!(f, "Failed to read templates: {e}")
+            }
+            ErrDis::BadStyles(e) => {
+                write!(f, "Failed to read styles: {e}")
             }
             ErrDis::BadPage(e) => {
                 write!(f, "Failed to read page: {e}")
