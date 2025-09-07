@@ -4,6 +4,25 @@ use std::{ffi::OsStr, fs, path::Path};
 use sussg::{Frontmatter, Mustache, Style, TheThing};
 use walkdir::WalkDir;
 
+pub fn read_static(static_path: &Path) -> Result<(), ErrDis> {
+    // maybe add some optimizations to images here? hmmmm?
+    for static_file in WalkDir::new(static_path).into_iter().filter_map(|e| e.ok()) {
+        let from = static_file.path();
+        let to = Path::new("./public").join(from.strip_prefix("./static").unwrap());
+
+        if static_file.file_type().is_dir() {
+            match fs::create_dir_all(&to) {
+                Ok(_) => {}
+                Err(e) => println!("somehow failed to create {}: {}", to.display(), e),
+            }
+        } else if static_file.file_type().is_file() {
+            fs::copy(from, to).expect("failed to copy file");
+        }
+    }
+
+    Ok(())
+}
+
 pub fn read_content(
     content_root_path: &Path,
     styles: &Vec<Style>,
