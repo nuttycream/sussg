@@ -28,13 +28,17 @@ pub struct Post {
 /// this is what'll be sent to the template
 /// put anything we need here that may be used
 /// everything needs a content.
-/// BUT that's not really required in mustache
-/// templates
+/// BUT that's not really required in the actual
+/// mustache templates
 #[derive(Content)]
 pub struct RenderedContent {
-    /// making this optional
-    /// but we can reference this im pretty sure
-    /// like {{frontmatter.title}}
+    /// extracting this from frontmatter
+    /// to be used like {{title}}
+    pub title: String,
+
+    /// making this optional to use
+    /// but available likeso
+    /// like {{#frontmatter}} {{\frontmatter}}
     pub frontmatter: Frontmatter,
 
     /// can be referenced in mustache
@@ -44,7 +48,7 @@ pub struct RenderedContent {
     pub content: String,
 }
 
-#[derive(Content, Debug, Deserialize, Serialize)]
+#[derive(Content, Clone, Debug, Deserialize, Serialize)]
 pub struct Frontmatter {
     pub title: String,
 

@@ -51,9 +51,12 @@ pub fn build() -> Result<(), ErrDis> {
             Err(e) => return Err(ErrDis::BadTemplates(e.to_string())),
         };
 
+        let frontmatter = thing.frontmatter.clone();
+
         let mut rendered = tpl.render(&RenderedContent {
-            frontmatter: thing.frontmatter,
+            title: thing.frontmatter.title,
             content: thing.content,
+            frontmatter,
         });
         //println!("{rendered:?}");
 
