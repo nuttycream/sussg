@@ -1,7 +1,7 @@
-use crate::{config::Frontmatter, convert::convert, errors::ErrDis};
+use crate::{convert::convert, errors::ErrDis};
 use std::{ffi::OsStr, fs, path::Path};
 
-use sussg::{Mustache, Style, TheThing};
+use sussg::{Frontmatter, Mustache, Style, TheThing};
 use walkdir::WalkDir;
 
 pub fn read_content(
@@ -104,7 +104,7 @@ fn read_page(
         .to_path_buf();
 
     let styles: Vec<Style> = match frontmatter.styles {
-        Some(style_strings) => {
+        Some(ref style_strings) => {
             let mut styles = Vec::new();
             for avail_style in avail_styles {
                 if style_strings.contains(&avail_style.name) {
@@ -123,9 +123,9 @@ fn read_page(
         .expect("Base template not found!!");
 
     match frontmatter.template {
-        Some(mustache_name) => {
+        Some(ref mustache_name) => {
             for avail_mustache in avail_templs {
-                if avail_mustache.name == mustache_name {
+                if avail_mustache.name == *mustache_name {
                     mustache = avail_mustache.clone();
                 }
             }
@@ -135,6 +135,7 @@ fn read_page(
 
     Ok(TheThing {
         path,
+        frontmatter,
         styles,
         mustache,
         content: html_output,
