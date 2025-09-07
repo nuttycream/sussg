@@ -13,6 +13,7 @@ pub struct Style {
 pub struct Mustache {
     pub name: String,
     pub path: PathBuf,
+    pub template: String,
 }
 
 // from /content/posts
@@ -24,7 +25,26 @@ pub struct Post {
     pub date: Option<String>,
 }
 
-#[derive(Debug, Deserialize, Serialize)]
+/// this is what'll be sent to the template
+/// put anything we need here that may be used
+/// everything needs a content.
+/// BUT that's not really required in mustache
+/// templates
+#[derive(Content)]
+pub struct RenderedContent {
+    /// making this optional
+    /// but we can reference this im pretty sure
+    /// like {{frontmatter.title}}
+    pub frontmatter: Frontmatter,
+
+    /// can be referenced in mustache
+    /// as {{{content}}}
+    /// we need 3x brackets for the
+    /// raw html
+    pub content: String,
+}
+
+#[derive(Content, Debug, Deserialize, Serialize)]
 pub struct Frontmatter {
     pub title: String,
 
@@ -39,7 +59,7 @@ pub struct Frontmatter {
     pub date: Option<String>,
 
     pub styles: Option<Vec<String>>,
-    pub overide_main_style: Option<bool>,
+    pub use_main: Option<bool>, // similar to use_base
 
     pub github: Option<String>,
 }

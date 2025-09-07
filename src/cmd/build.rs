@@ -4,7 +4,8 @@ use std::{
     path::Path,
 };
 
-use walkdir::WalkDir;
+use ramhorns::Template;
+use sussg::RenderedContent;
 
 use crate::{
     errors::ErrDis,
@@ -37,13 +38,46 @@ pub fn build() -> Result<(), ErrDis> {
         Err(e) => return Err(ErrDis::BadContent(e.to_string())),
     };
 
-    //println!("avail_styles:{:?}", styles);
+    println!("avail_styles:{:?}", styles);
     //println!("avail_templs:{:?}", mustaches);
     //println!("content:{:?}", content);
 
     for thing in content {
         // this is where we'll start to populate
-        // templates and then send write them out to html
+        // templates and then write them out to html
+
+        let tpl = match Template::new(thing.mustache.template) {
+            Ok(t) => t,
+            Err(e) => return Err(ErrDis::BadTemplates(e.to_string())),
+        };
+
+        let mut rendered = tpl.render(&RenderedContent {
+            frontmatter: thing.frontmatter,
+            content: thing.content,
+        });
+        //println!("{rendered:?}");
+
+        let mut link = String::new();
+        for style in &thing.styles {
+            link.push_str(&format!(
+                "<link rel=\"stylesheet\" href=\"{}\">\n",
+                style.path.display()
+            ));
+        }
+
+        rendered = link + &rendered;
+        //println!("{rendered:?}");
+
+        let out = Path::new("./public")
+            .join(thing.path)
+            .with_extension("html");
+
+        fs::create_dir_all(out.parent().expect("failed to get parent for current dir"))
+            .expect("somehow failed to create directory for content");
+
+        fs::write(&out, rendered).expect("somehow failed to write out file to current dir");
+
+        println!("created: {}", out.display());
     }
 
     Ok(())

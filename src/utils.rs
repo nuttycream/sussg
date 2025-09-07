@@ -97,9 +97,15 @@ pub fn read_templates(template_path: &Path) -> Result<Vec<Mustache>, ErrDis> {
                 .unwrap_or("")
                 .to_string();
 
+            let template = match fs::read_to_string(template_file.path()) {
+                Ok(t) => t,
+                Err(e) => return Err(ErrDis::BadTemplates(e.to_string())),
+            };
+
             mustaches.push(Mustache {
                 name,
                 path: template_file.path().to_path_buf(),
+                template,
             });
         }
     }
