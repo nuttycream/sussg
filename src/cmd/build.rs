@@ -9,7 +9,7 @@ use sussg::{Post, RenderedContent};
 
 use crate::{
     errors::ErrDis,
-    utils::{get_out_path, read_content, read_static, read_styles, read_templates},
+    utils::{get_out_path, get_post_url, read_content, read_static, read_styles, read_templates},
 };
 
 pub fn build() -> Result<(), ErrDis> {
@@ -46,8 +46,11 @@ pub fn build() -> Result<(), ErrDis> {
     for thing in content.iter().clone() {
         if thing.is_post {
             let frontmatter = thing.frontmatter.clone();
+            let url = get_post_url(&thing.path);
+
             posts.push(Post {
                 title: frontmatter.title,
+                url,
                 description: frontmatter.description,
                 date: frontmatter.date,
             });

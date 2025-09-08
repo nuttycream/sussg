@@ -22,6 +22,7 @@ pub struct Mustache {
 #[derive(Content, Clone)]
 pub struct Post {
     pub title: String,
+    pub url: String,
     pub description: Option<String>,
     pub date: Option<String>,
 }

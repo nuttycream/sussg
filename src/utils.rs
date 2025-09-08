@@ -8,6 +8,31 @@ use std::{
 use sussg::{Frontmatter, Mustache, Style, TheThing};
 use walkdir::WalkDir;
 
+/// neat helper func specific for posts
+/// we can reuse get_out_path() but i gotta
+/// strip ./public and also make it an absolute
+/// path
+pub fn get_post_url(content_path: &Path) -> String {
+    let out_path = get_out_path(content_path);
+    let relative_path = out_path
+        .strip_prefix("./public")
+        .expect("somehow failed to strip ./public from rel_path");
+
+    if relative_path.file_name() == Some(OsStr::new("index.html")) {
+        let parent = relative_path
+            .parent()
+            .expect("somehow failed to get parent, i need to do some better err handling lol");
+
+        if parent == Path::new("") {
+            "/".to_string()
+        } else {
+            format!("/{}/", parent.display())
+        }
+    } else {
+        format!("/{}", relative_path.display())
+    }
+}
+
 /// neat helper func
 /// if index.md -> index.html
 /// else example.md -> example/index.html
