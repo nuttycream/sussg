@@ -11,6 +11,17 @@
         </div>
         <div class="content">
             {{{content}}}
+            <div class="posts">
+                {{#posts}}
+                <article>
+                    <h2>{{title}}</h2>
+                    <p>{{description}}</p>
+
+                <article>
+                {{/posts}}\
+                {{^posts}}<p>No posts yet :(</p>{{/posts}}";
+
+            </div>
         </div>
     </body>
 </html>
