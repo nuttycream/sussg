@@ -5,7 +5,7 @@ use std::{
 };
 
 use ramhorns::Template;
-use sussg::RenderedContent;
+use sussg::{Post, RenderedContent};
 
 use crate::{
     errors::ErrDis,
@@ -42,6 +42,18 @@ pub fn build() -> Result<(), ErrDis> {
     //println!("avail_templs:{:?}", mustaches);
     //println!("content:{:?}", content);
 
+    let mut posts = Vec::new();
+    for thing in content.iter().clone() {
+        if thing.is_post {
+            let frontmatter = thing.frontmatter.clone();
+            posts.push(Post {
+                title: frontmatter.title,
+                description: frontmatter.description,
+                date: frontmatter.date,
+            });
+        }
+    }
+
     for thing in content {
         // this is where we'll start to populate
         // templates and then write them out to html
@@ -59,6 +71,7 @@ pub fn build() -> Result<(), ErrDis> {
             title: thing.frontmatter.title,
             content: thing.content,
             frontmatter,
+            posts: posts.clone(),
         });
         //println!("{rendered:?}");
 

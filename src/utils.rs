@@ -190,12 +190,15 @@ fn read_page(
         None => {}
     }
 
+    let is_post = frontmatter.is_post.is_some_and(|b| b == true);
+
     Ok(TheThing {
         path,
         frontmatter,
         styles,
         mustache,
         content: html_output,
+        is_post,
     })
 }
 

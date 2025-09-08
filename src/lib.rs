@@ -19,6 +19,7 @@ pub struct Mustache {
 // from /content/posts
 // this should all be gathered
 // from the frontmatter
+#[derive(Content, Clone)]
 pub struct Post {
     pub title: String,
     pub description: Option<String>,
@@ -46,11 +47,20 @@ pub struct RenderedContent {
     /// we need 3x brackets for the
     /// raw html
     pub content: String,
+
+    pub posts: Vec<Post>,
 }
 
 #[derive(Content, Clone, Debug, Deserialize, Serialize)]
 pub struct Frontmatter {
     pub title: String,
+
+    /// putting the post thingymajig here
+    /// I can iterate through all pages
+    /// then collect the posts using this bool
+    /// without having to use a specific post/ dir
+    /// GOD IM A GENIUS
+    pub is_post: Option<bool>, // defaults to false
 
     /// can be optional,
     /// it will still inherit base.html
@@ -77,4 +87,5 @@ pub struct TheThing {
     pub styles: Vec<Style>,
     pub mustache: Mustache,
     pub content: String,
+    pub is_post: bool,
 }
