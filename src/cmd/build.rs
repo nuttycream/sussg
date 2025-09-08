@@ -9,7 +9,7 @@ use sussg::RenderedContent;
 
 use crate::{
     errors::ErrDis,
-    utils::{read_content, read_static, read_styles, read_templates},
+    utils::{get_out_path, read_content, read_static, read_styles, read_templates},
 };
 
 pub fn build() -> Result<(), ErrDis> {
@@ -73,9 +73,7 @@ pub fn build() -> Result<(), ErrDis> {
         rendered = link + &rendered;
         //println!("{rendered:?}");
 
-        let out = Path::new("./public")
-            .join(thing.path)
-            .with_extension("html");
+        let out = get_out_path(&thing.path);
 
         fs::create_dir_all(out.parent().expect("failed to get parent for current dir"))
             .expect("somehow failed to create directory for content");

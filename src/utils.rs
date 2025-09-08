@@ -1,8 +1,26 @@
 use crate::{convert::convert, errors::ErrDis};
-use std::{ffi::OsStr, fs, path::Path};
+use std::{
+    ffi::OsStr,
+    fs,
+    path::{Path, PathBuf},
+};
 
 use sussg::{Frontmatter, Mustache, Style, TheThing};
 use walkdir::WalkDir;
+
+/// neat helper func
+/// if index.md -> index.html
+/// else example.md -> example/index.html
+pub fn get_out_path(content_root_path: &Path) -> PathBuf {
+    let public = Path::new("./public").join(content_root_path);
+
+    if content_root_path.file_stem() == Some(OsStr::new("index")) {
+        public.with_extension("html")
+    } else {
+        let dir = public.with_extension("");
+        dir.join("index.html")
+    }
+}
 
 pub fn read_static(static_path: &Path) -> Result<(), ErrDis> {
     // maybe add some optimizations to images here? hmmmm?
