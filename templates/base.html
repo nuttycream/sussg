@@ -14,13 +14,18 @@
             <div class="posts">
                 {{#posts}}
                 <article>
-                    <h2>{{title}}</h2>
+                    <a href="{{url}}">
+                        <h1>{{title}}</h1>
+                    </a>
                     <p>{{description}}</p>
 
-                <article>
-                {{/posts}}\
-                {{^posts}}<p>No posts yet :(</p>{{/posts}}";
-
+                    <article>
+                        {{/posts}}\
+                        {{^posts}}
+                        <p>
+                            No posts yet :(
+                        </p>
+                        {{/posts}}
             </div>
         </div>
     </body>
