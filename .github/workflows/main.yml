@@ -4,6 +4,11 @@ on:
 env: 
   CARGO_TERM_COLOR: always
 
+permissions:
+  contents: read #write
+  pages: write 
+  id-token: write
+
 jobs:
   build:
     name: Build and run sussg
