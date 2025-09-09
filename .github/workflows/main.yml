@@ -9,15 +9,17 @@ jobs:
     name: Build and run sussg
     runs-on: ubuntu-latest
     steps:
+      - uses: actions/checkout@v4
+
       - name: run sussg and build static files
         id: build
-        uses: actions/checkout@v4
         run: cargo run --release -- build
       
       - name: upload static files as artifact
         id: deployment
         uses: actions/upload-pages-artifact@v3
-        with: ./public
+        with: 
+          path: ./public
 
   deploy:
     environment:
