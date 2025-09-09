@@ -17,7 +17,10 @@ struct Args {
 enum Commands {
     Init,
     Build,
-    Serve,
+    Serve {
+        #[arg(short, long, default_value_t = 3030)]
+        port: u32,
+    },
 }
 
 fn main() {
@@ -28,6 +31,6 @@ fn main() {
     match &args.command {
         Commands::Init => cmd::init::init(),
         Commands::Build => cmd::build::build(cfg).unwrap(),
-        Commands::Serve => cmd::serve::serve(),
+        Commands::Serve { port } => cmd::serve::serve(*port),
     }
 }

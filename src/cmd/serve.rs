@@ -9,7 +9,7 @@ use tower_livereload::LiveReloadLayer;
 use crate::config::load_config;
 
 #[tokio::main]
-pub async fn serve() {
+pub async fn serve(port: u32) {
     let livereload = LiveReloadLayer::new();
     let reloader = livereload.reloader();
 
@@ -51,7 +51,7 @@ pub async fn serve() {
         .fallback_service(static_files)
         .layer(livereload);
 
-    let listener = tokio::net::TcpListener::bind("127.0.0.1:3030")
+    let listener = tokio::net::TcpListener::bind(format!("127.0.0.1:{port}"))
         .await
         .unwrap();
 
