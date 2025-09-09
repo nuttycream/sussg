@@ -1,13 +1,13 @@
 on:
   push:
     tags:
-      - "*"
+      - "v*.*.*"
 
 env: 
   CARGO_TERM_COLOR: always
 
 permissions:
-  contents: read #write
+  contents: write
   pages: write 
   id-token: write
 
@@ -16,17 +16,27 @@ jobs:
     name: Build and run sussg
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: run sussg and build static files
         id: build
         run: cargo run --release -- build
-      
+
       - name: upload static files as artifact
         id: deployment
         uses: actions/upload-pages-artifact@v3
         with: 
           path: ./public
+
+  release:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Release
+        uses: softprops/action-gh-release@v2
 
   deploy:
     environment:
