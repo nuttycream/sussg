@@ -18,18 +18,28 @@ pub fn get_post_url(site_url: &str, content_path: &Path) -> String {
         .strip_prefix("./public")
         .expect("somehow failed to strip ./public from rel_path");
 
+    let base_path = url::Url::parse(site_url)
+        .ok()
+        .map(|u| u.path().trim_end_matches('/').to_string())
+        .unwrap_or_else(|| String::new());
+
     if relative_path.file_name() == Some(OsStr::new("index.html")) {
         let parent = relative_path
             .parent()
             .expect("somehow failed to get parent, i need to do some better err handling lol");
 
         if parent == Path::new("") {
-            site_url.to_string()
+            // root
+            if base_path.is_empty() || base_path == "/" {
+                "/".to_string()
+            } else {
+                format!("{}/", base_path)
+            }
         } else {
-            format!("/{}/", parent.display())
+            format!("{}/{}/", base_path, parent.display())
         }
     } else {
-        format!("/{}", relative_path.display())
+        format!("{}/{}", base_path, relative_path.display())
     }
 }
 
