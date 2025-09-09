@@ -23,9 +23,11 @@ enum Commands {
 fn main() {
     let args = Args::parse();
 
+    let cfg = config::load_config();
+
     match &args.command {
         Commands::Init => cmd::init::init(),
-        Commands::Build => cmd::build::build().unwrap(),
+        Commands::Build => cmd::build::build(cfg).unwrap(),
         Commands::Serve => cmd::serve::serve(),
     }
 }

@@ -6,6 +6,8 @@ use tokio::signal;
 use tower_http::services::ServeDir;
 use tower_livereload::LiveReloadLayer;
 
+use crate::config::load_config;
+
 #[tokio::main]
 pub async fn serve() {
     let livereload = LiveReloadLayer::new();
@@ -16,7 +18,9 @@ pub async fn serve() {
             let event = result.unwrap();
 
             if event.kind.is_modify() {
-                crate::cmd::build::build();
+                let mut cfg = load_config();
+                cfg.general.url = "/".to_string();
+                let _ = crate::cmd::build::build(cfg).unwrap();
                 reloader.reload();
             }
         },
@@ -30,6 +34,7 @@ pub async fn serve() {
         Path::new("styles"),
         Path::new("static"),
         Path::new("templates"),
+        Path::new("config.toml"),
     ];
 
     for path in paths {
@@ -38,7 +43,9 @@ pub async fn serve() {
 
     let static_files = ServeDir::new("./public");
 
-    crate::cmd::build::build();
+    let mut cfg = load_config();
+    cfg.general.url = "/".to_string();
+    let _ = crate::cmd::build::build(cfg).unwrap();
 
     let app = Router::new()
         .fallback_service(static_files)

@@ -12,7 +12,7 @@ use walkdir::WalkDir;
 /// we can reuse get_out_path() but i gotta
 /// strip ./public and also make it an absolute
 /// path
-pub fn get_post_url(content_path: &Path) -> String {
+pub fn get_post_url(site_url: &str, content_path: &Path) -> String {
     let out_path = get_out_path(content_path);
     let relative_path = out_path
         .strip_prefix("./public")
@@ -24,7 +24,7 @@ pub fn get_post_url(content_path: &Path) -> String {
             .expect("somehow failed to get parent, i need to do some better err handling lol");
 
         if parent == Path::new("") {
-            "/".to_string()
+            site_url.to_string()
         } else {
             format!("/{}/", parent.display())
         }

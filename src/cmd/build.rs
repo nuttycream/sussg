@@ -7,15 +7,15 @@ use std::{
 use ramhorns::Template;
 use sussg::{Post, RenderedContent};
 
-use crate::{
-    errors::ErrDis,
-    utils::{get_out_path, get_post_url, read_content, read_static, read_styles, read_templates},
-};
+use crate::{config::Config, errors::ErrDis, utils::*};
 
-pub fn build() -> Result<(), ErrDis> {
-    match fs::create_dir_all("public") {
-        Ok(_) => println!("created ./public"),
-        Err(e) => println!("somehow failed to create ./public: {e}"),
+pub fn build(config: Config) -> Result<(), ErrDis> {
+    let output_dir = config.general.output_dir;
+    let site_url = config.general.url;
+
+    match fs::create_dir_all(&output_dir) {
+        Ok(_) => println!("created {output_dir}"),
+        Err(e) => println!("somehow failed to create {output_dir}: {e}"),
     }
 
     match read_static(Path::new(OsStr::new("./static"))) {
@@ -46,7 +46,7 @@ pub fn build() -> Result<(), ErrDis> {
     for thing in content.iter().clone() {
         if thing.is_post {
             let frontmatter = thing.frontmatter.clone();
-            let url = get_post_url(&thing.path);
+            let url = get_post_url(&site_url, &thing.path);
 
             posts.push(Post {
                 title: frontmatter.title,
@@ -81,7 +81,8 @@ pub fn build() -> Result<(), ErrDis> {
         let mut link = String::new();
         for style in &thing.styles {
             link.push_str(&format!(
-                "<link rel=\"stylesheet\" href=\"/{}\">\n",
+                "<link rel=\"stylesheet\" href=\"{}{}\">\n",
+                site_url,
                 style.path.display()
             ));
         }
