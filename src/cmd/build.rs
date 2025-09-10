@@ -4,6 +4,7 @@ use std::{
     path::Path,
 };
 
+use axum::routing::post;
 use ramhorns::Template;
 use sussg::{Post, RenderedContent};
 
@@ -70,10 +71,19 @@ pub fn build(config: Config) -> Result<(), ErrDis> {
 
         let frontmatter = thing.frontmatter.clone();
 
+        let most_recent = posts
+            .last()
+            .unwrap_or(&Post {
+                title: "no posts".to_string(),
+                ..Default::default()
+            })
+            .clone();
+
         let mut rendered = tpl.render(&RenderedContent {
             title: thing.frontmatter.title,
             content: thing.content,
             frontmatter,
+            most_recent,
             posts: posts.clone(),
         });
         //println!("{rendered:?}");

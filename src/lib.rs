@@ -19,7 +19,7 @@ pub struct Mustache {
 // from /content/posts
 // this should all be gathered
 // from the frontmatter
-#[derive(Content, Clone)]
+#[derive(Content, Clone, Default)]
 pub struct Post {
     pub title: String,
     pub url: String,
@@ -49,6 +49,12 @@ pub struct RenderedContent {
     /// raw html
     pub content: String,
 
+    /// Most recent post
+    /// is the last element in
+    /// the posts. Not necessarily
+    /// the newest, which is bad,
+    /// we should sort by datetime, but...
+    pub most_recent: Post,
     pub posts: Vec<Post>,
 }
 
