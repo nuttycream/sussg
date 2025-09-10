@@ -17,7 +17,7 @@ pub struct GeneralConfig {
 
 #[derive(Deserialize, Serialize)]
 pub struct StyleConfig {
-    pub main: String,
+    pub main: Vec<String>,
 }
 
 #[derive(Deserialize, Serialize)]
@@ -34,7 +34,7 @@ impl Default for Config {
             },
 
             style: StyleConfig {
-                main: "main".to_string(),
+                main: vec!["main".to_string()],
             },
 
             template: TemplateConfig {

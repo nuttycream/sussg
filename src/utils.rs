@@ -80,7 +80,7 @@ pub fn read_content(
     content_root_path: &Path,
     styles: &Vec<Style>,
     mustaches: &Vec<Mustache>,
-    main_style: &str,
+    main_style: &Vec<String>,
     base_template: &str,
 ) -> Result<Vec<TheThing>, ErrDis> {
     let mut things = Vec::new();
@@ -185,14 +185,13 @@ fn read_page(
     page_path: &Path,
     avail_styles: &Vec<Style>,
     avail_templs: &Vec<Mustache>,
-    main_style: &str,
+    main_styles: &Vec<String>,
     base_template: &str,
 ) -> Result<TheThing, ErrDis> {
     let (frontmatter, html_output) = match read_markdown(page_path) {
         Ok((fm, c)) => (fm, c),
         Err(e) => return Err(ErrDis::BadMarkdown(e.to_string())),
     };
-    println!("{:?}", avail_styles);
 
     println!("processing page:{}", page_path.display());
 
@@ -203,13 +202,18 @@ fn read_page(
 
     let styles: Vec<Style> = {
         let mut styles = Vec::new();
-        if let Some(main_style_css) = avail_styles.iter().find(|s| s.name == main_style) {
-            styles.push(main_style_css.clone());
+
+        for avail_style in avail_styles {
+            if main_styles.contains(&avail_style.name) {
+                styles.push(avail_style.clone());
+            }
         }
 
         if let Some(ref style_strings) = frontmatter.styles {
             for avail_style in avail_styles {
-                if style_strings.contains(&avail_style.name) && avail_style.name != main_style {
+                if style_strings.contains(&avail_style.name)
+                    && !main_styles.contains(&avail_style.name)
+                {
                     styles.push(avail_style.clone());
                 }
             }
