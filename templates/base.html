@@ -6,12 +6,11 @@
         <title>{{title}}</title>
     </head>
     <body>
-        <div class="header">
-            {{title}}
-        </div>
         <div class="content">
             {{{content}}}
+            most recent: {{#most_recent}} {{title}} {{/most_recent}}
             <div class="posts">
+                <h1>Posts</h1>
                 {{#posts}}
                 <article>
                     <a href="{{url}}">
@@ -19,13 +18,13 @@
                     </a>
                     <p>{{description}}</p>
 
-                    <article>
-                        {{/posts}}\
-                        {{^posts}}
-                        <p>
-                            No posts yet :(
-                        </p>
-                        {{/posts}}
+                <article>
+                    {{/posts}}
+                    {{^posts}}
+                    <p>
+                        No posts yet :(
+                    </p>
+                {{/posts}}
             </div>
         </div>
     </body>
