@@ -2,3 +2,25 @@ body {
   background-color: black;
   color: white;
 }
+
+.container {
+  display: flex;
+  flex-direction: row;
+  gap: 1rem;
+}
+
+nav {
+  display: flex;
+  flex-direction: column;
+  padding: 1rem;
+  border-right: 2px solid slategray;
+
+  a {
+    text-decoration: none;
+    color: limegreen;
+  }
+
+  a:hover {
+    color: coral;
+  }
+}
