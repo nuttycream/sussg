@@ -80,6 +80,8 @@ pub fn read_content(
     content_root_path: &Path,
     styles: &Vec<Style>,
     mustaches: &Vec<Mustache>,
+    main_style: &str,
+    base_template: &str,
 ) -> Result<Vec<TheThing>, ErrDis> {
     let mut things = Vec::new();
     for content in WalkDir::new(content_root_path)
@@ -87,10 +89,11 @@ pub fn read_content(
         .filter_map(|e| e.ok())
     {
         if content.path().extension() == Some(OsStr::new("md")) {
-            let thing = match read_page(content.path(), styles, mustaches) {
-                Ok(thing) => thing,
-                Err(e) => return Err(ErrDis::BadPage(e.to_string())),
-            };
+            let thing =
+                match read_page(content.path(), styles, mustaches, main_style, base_template) {
+                    Ok(thing) => thing,
+                    Err(e) => return Err(ErrDis::BadPage(e.to_string())),
+                };
 
             things.push(thing);
         }
@@ -182,11 +185,14 @@ fn read_page(
     page_path: &Path,
     avail_styles: &Vec<Style>,
     avail_templs: &Vec<Mustache>,
+    main_style: &str,
+    base_template: &str,
 ) -> Result<TheThing, ErrDis> {
     let (frontmatter, html_output) = match read_markdown(page_path) {
         Ok((fm, c)) => (fm, c),
         Err(e) => return Err(ErrDis::BadMarkdown(e.to_string())),
     };
+    println!("{:?}", avail_styles);
 
     println!("processing page:{}", page_path.display());
 
@@ -195,22 +201,26 @@ fn read_page(
         .expect("Somehow failed to strip_prefix for ./content")
         .to_path_buf();
 
-    let styles: Vec<Style> = match frontmatter.styles {
-        Some(ref style_strings) => {
-            let mut styles = Vec::new();
+    let styles: Vec<Style> = {
+        let mut styles = Vec::new();
+        if let Some(main_style_css) = avail_styles.iter().find(|s| s.name == main_style) {
+            styles.push(main_style_css.clone());
+        }
+
+        if let Some(ref style_strings) = frontmatter.styles {
             for avail_style in avail_styles {
-                if style_strings.contains(&avail_style.name) {
+                if style_strings.contains(&avail_style.name) && avail_style.name != main_style {
                     styles.push(avail_style.clone());
                 }
             }
-            styles
         }
-        None => Vec::new(),
+
+        styles
     };
 
     let mut mustache = avail_templs
         .iter()
-        .find(|m| m.name == "base")
+        .find(|m| m.name == base_template)
         .cloned()
         .expect("Base template not found!!");
 

@@ -3,7 +3,7 @@ use std::{
     io::Write,
 };
 
-use crate::config::{Config, GeneralConfig};
+use crate::config::Config;
 
 pub fn init() {
     match fs::create_dir("content") {
@@ -26,12 +26,7 @@ pub fn init() {
         Err(e) => println!("failed to create ./static: {e}"),
     };
 
-    let general = GeneralConfig {
-        url: "www.some.com".to_string(),
-        output_dir: "public".to_string(),
-    };
-
-    let toml = toml::to_string(&Config { general }).unwrap();
+    let toml = toml::to_string(&Config::default()).unwrap();
 
     File::create("config.toml")
         .and_then(|mut file| file.write_all(toml.as_bytes()))

@@ -4,7 +4,6 @@ use std::{
     path::Path,
 };
 
-use axum::routing::post;
 use ramhorns::Template;
 use sussg::{Post, RenderedContent};
 
@@ -34,7 +33,13 @@ pub fn build(config: Config) -> Result<(), ErrDis> {
         Err(e) => return Err(ErrDis::BadTemplates(e.to_string())),
     };
 
-    let content = match read_content(Path::new(OsStr::new("./content")), &styles, &mustaches) {
+    let content = match read_content(
+        Path::new(OsStr::new("./content")),
+        &styles,
+        &mustaches,
+        &config.style.main,
+        &config.template.base,
+    ) {
         Ok(c) => c,
         Err(e) => return Err(ErrDis::BadContent(e.to_string())),
     };

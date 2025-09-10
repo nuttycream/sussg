@@ -1,3 +1,9 @@
 [general]
 url = "https://nuttycream.github.io/sussg/"
 output_dir = "public"
+
+[style]
+main = "main" # default style to use if not otherwise specified in the frontmatter
+
+[template]
+base = "base" # default template to use if not otherwise specified in the frontmatter
