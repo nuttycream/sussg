@@ -100,11 +100,12 @@ pub fn build(config: Config) -> Result<(), ErrDis> {
         };
 
         let mut rendered = match template.render(context! {
-            title => thing.frontmatter.title.clone(),
+            title => thing.frontmatter.title,
             content => thing.content,
             frontmatter => thing.frontmatter,
-            posts => posts.to_owned(),
-            most_recent => most_recent.to_owned(),
+            posts,
+            most_recent,
+            site_url
         }) {
             Ok(r) => r,
             Err(e) => return Err(ErrDis::BadRender(e.to_string())),
