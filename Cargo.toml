@@ -4,16 +4,16 @@ version = "0.1.0"
 edition = "2024"
 
 [dependencies]
-axum = "0.8.4"
+axum = { version = "0.8.4", default-features = false, features = ["tokio", "http1"] }
 clap = { version = "4.5.45", features = ["derive"] }
-notify = "8.2.0"
+minijinja = { version = "2.12.0", default-features = false, features = ["serde"]}  
+notify = { version = "8.2.0", default-features = false }  
 pulldown-cmark = { version = "0.13.0", features = ["html"] }
-ramhorns = "1.0.1"
 serde = { version = "1.0.219", features = ["derive"] }
-serde_yaml = "0.9.34"
-tokio = { version = "1.47.1", features = ["full"] }
-toml = "0.9.5"
-tower-http = { version = "0.6.6", features = ["full", "timeout"] }
-tower-livereload = "0.9.6"
-url = "2.5.7"
-walkdir = "2.5.0"
+serde_yaml = { version = "0.9.34", default-features = false }
+tokio = { version = "1.47.1", default-features = false, features = ["signal", "fs", "rt-multi-thread"] }  
+toml = { version = "0.9.5", default-features = false, features = ["serde", "parse", "display"] }
+tower-http = { version = "0.6.6", default-features = false, features = ["timeout", "trace", "fs"] }  
+tower-livereload = "0.9.6"  
+url = {version = "2.5.7", default-features = false}  
+walkdir = "2.5.0"  
