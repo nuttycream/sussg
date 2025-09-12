@@ -1,6 +1,5 @@
 use std::path::PathBuf;
 
-use ramhorns::Content;
 use serde::{Deserialize, Serialize};
 
 #[derive(Default, Debug, Clone)]
@@ -10,16 +9,15 @@ pub struct Style {
 }
 
 #[derive(Default, Debug, Clone)]
-pub struct Mustache {
+pub struct Template {
     pub name: String,
-    pub path: PathBuf,
     pub template: String,
 }
 
 // from /content/posts
 // this should all be gathered
 // from the frontmatter
-#[derive(Content, Clone, Default)]
+#[derive(Clone, Default, Serialize)]
 pub struct Post {
     pub title: String,
     pub url: String,
@@ -27,38 +25,7 @@ pub struct Post {
     pub date: Option<String>,
 }
 
-/// this is what'll be sent to the template
-/// put anything we need here that may be used
-/// everything needs a content.
-/// BUT that's not really required in the actual
-/// mustache templates
-#[derive(Content)]
-pub struct RenderedContent {
-    /// extracting this from frontmatter
-    /// to be used like {{title}}
-    pub title: String,
-
-    /// making this optional to use
-    /// but available likeso
-    /// like {{#frontmatter}} {{\frontmatter}}
-    pub frontmatter: Frontmatter,
-
-    /// can be referenced in mustache
-    /// as {{{content}}}
-    /// we need 3x brackets for the
-    /// raw html
-    pub content: String,
-
-    /// Most recent post
-    /// is the last element in
-    /// the posts. Not necessarily
-    /// the newest, which is bad,
-    /// we should sort by datetime, but...
-    pub most_recent: Post,
-    pub posts: Vec<Post>,
-}
-
-#[derive(Content, Clone, Debug, Deserialize, Serialize)]
+#[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct Frontmatter {
     pub title: String,
 
@@ -92,7 +59,7 @@ pub struct TheThing {
     pub path: PathBuf,
     pub frontmatter: Frontmatter,
     pub styles: Vec<Style>,
-    pub mustache: Mustache,
+    pub template: Template,
     pub content: String,
     pub is_post: bool,
 }

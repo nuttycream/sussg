@@ -5,7 +5,7 @@ use std::{
     path::{Path, PathBuf},
 };
 
-use sussg::{Frontmatter, Mustache, Style, TheThing};
+use sussg::{Frontmatter, Style, Template, TheThing};
 use walkdir::WalkDir;
 
 /// neat helper func specific for posts
@@ -79,7 +79,7 @@ pub fn read_static(static_path: &Path) -> Result<(), ErrDis> {
 pub fn read_content(
     content_root_path: &Path,
     styles: &Vec<Style>,
-    mustaches: &Vec<Mustache>,
+    mustaches: &Vec<Template>,
     main_style: &Vec<String>,
     base_template: &str,
 ) -> Result<Vec<TheThing>, ErrDis> {
@@ -145,7 +145,7 @@ pub fn read_styles(styles_path: &Path) -> Result<Vec<Style>, ErrDis> {
     Ok(styles)
 }
 
-pub fn read_templates(template_path: &Path) -> Result<Vec<Mustache>, ErrDis> {
+pub fn read_templates(template_path: &Path) -> Result<Vec<Template>, ErrDis> {
     let mut mustaches = Vec::new();
 
     for template_file in WalkDir::new(template_path)
@@ -164,17 +164,12 @@ pub fn read_templates(template_path: &Path) -> Result<Vec<Mustache>, ErrDis> {
                 .map(|name| name.strip_suffix(".html").unwrap_or(name))
                 .unwrap_or("")
                 .to_string();
-
             let template = match fs::read_to_string(template_file.path()) {
                 Ok(t) => t,
                 Err(e) => return Err(ErrDis::BadTemplates(e.to_string())),
             };
 
-            mustaches.push(Mustache {
-                name,
-                path: template_file.path().to_path_buf(),
-                template,
-            });
+            mustaches.push(Template { name, template });
         }
     }
 
@@ -184,7 +179,7 @@ pub fn read_templates(template_path: &Path) -> Result<Vec<Mustache>, ErrDis> {
 fn read_page(
     page_path: &Path,
     avail_styles: &Vec<Style>,
-    avail_templs: &Vec<Mustache>,
+    avail_templs: &Vec<Template>,
     main_styles: &Vec<String>,
     base_template: &str,
 ) -> Result<TheThing, ErrDis> {
@@ -245,7 +240,7 @@ fn read_page(
         path,
         frontmatter,
         styles,
-        mustache,
+        template: mustache,
         content: html_output,
         is_post,
     })
