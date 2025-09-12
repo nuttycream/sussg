@@ -4,8 +4,8 @@ use std::{
     path::Path,
 };
 
-use ramhorns::Template;
-use sussg::{Post, RenderedContent};
+use minijinja::{Environment, context};
+use sussg::Post;
 
 use crate::{config::Config, errors::ErrDis, utils::*};
 
@@ -28,15 +28,23 @@ pub fn build(config: Config) -> Result<(), ErrDis> {
         Err(e) => return Err(ErrDis::BadStyles(e.to_string())),
     };
 
-    let mustaches = match read_templates(Path::new(OsStr::new("./templates"))) {
+    let templates = match read_templates(Path::new(OsStr::new("./templates"))) {
         Ok(m) => m,
         Err(e) => return Err(ErrDis::BadTemplates(e.to_string())),
     };
 
+    let mut env = Environment::new();
+    for template in &templates {
+        match env.add_template(&template.name, &template.template) {
+            Ok(_) => println!("added template: {} to environment", template.name),
+            Err(e) => println!("could not add template {} because: {}", template.name, e),
+        }
+    }
+
     let content = match read_content(
         Path::new(OsStr::new("./content")),
         &styles,
-        &mustaches,
+        &templates,
         &config.style.main,
         &config.template.base,
     ) {
@@ -69,13 +77,6 @@ pub fn build(config: Config) -> Result<(), ErrDis> {
 
         println!("creating:{}", thing.path.display());
 
-        let tpl = match Template::new(thing.mustache.template) {
-            Ok(t) => t,
-            Err(e) => return Err(ErrDis::BadTemplates(e.to_string())),
-        };
-
-        let frontmatter = thing.frontmatter.clone();
-
         let most_recent = posts
             .last()
             .unwrap_or(&Post {
@@ -83,15 +84,6 @@ pub fn build(config: Config) -> Result<(), ErrDis> {
                 ..Default::default()
             })
             .clone();
-
-        let mut rendered = tpl.render(&RenderedContent {
-            title: thing.frontmatter.title,
-            content: thing.content,
-            frontmatter,
-            most_recent,
-            posts: posts.clone(),
-        });
-        //println!("{rendered:?}");
 
         let mut link = String::new();
         for style in &thing.styles {
@@ -102,8 +94,23 @@ pub fn build(config: Config) -> Result<(), ErrDis> {
             ));
         }
 
+        let template = match env.get_template(&thing.template.name) {
+            Ok(t) => t,
+            Err(e) => return Err(ErrDis::BadTemplates(e.to_string())),
+        };
+
+        let mut rendered = match template.render(context! {
+            title => thing.frontmatter.title.clone(),
+            content => thing.content,
+            frontmatter => thing.frontmatter,
+            posts => posts.to_owned(),
+            most_recent => most_recent.to_owned(),
+        }) {
+            Ok(r) => r,
+            Err(e) => return Err(ErrDis::BadRender(e.to_string())),
+        };
+
         rendered = link + &rendered;
-        //println!("{rendered:?}");
 
         let out = get_out_path(&thing.path);
 
