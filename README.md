@@ -4,7 +4,7 @@
 
 **sussg** (pronounced sus-gee like Sasuke the guy who commited fratricide in
 that one Japanese Animation) is a super ultimate static site generator that is
-honestly just a wrapper for `pulldown-cmark` and `ramhorns`. If you want a
+honestly just a wrapper for `pulldown-cmark` and `minijinja`. If you want a
 better generator, please use [Zola](https://www.getzola.org).
 
 If you're still here, then this is a no frills/barebones static site generator.
@@ -69,7 +69,7 @@ sussg serve
 `config.toml` in your current directory.
 
 - content -> write your Markdown content here
-- templates -> for `mustache` templates
+- templates -> for `minijinja` templates
 - styles -> for css files
 - static -> images, fonts, or any static file. This is similar to Zola's static
   folder, where it just copies anything found here to the output directory.
