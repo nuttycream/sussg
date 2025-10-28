@@ -28,7 +28,7 @@ I'll reply with: good question, because well uhhh
 
 ```nix
 inputs = {
-  ssusg.url = "github:nuttycream/sussg"
+  sussg.url = "github:nuttycream/sussg"
 };
 
 outputs = {
