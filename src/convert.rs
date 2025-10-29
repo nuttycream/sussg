@@ -2,6 +2,10 @@ use pulldown_cmark::{Event, MetadataBlockKind, Options, Tag, TagEnd};
 
 pub fn convert(md_string: &str) -> (String, String) {
     let mut options = Options::empty();
+    options.insert(Options::ENABLE_HEADING_ATTRIBUTES);
+    options.insert(Options::ENABLE_GFM);
+    options.insert(Options::ENABLE_FOOTNOTES);
+    options.insert(Options::ENABLE_WIKILINKS);
     options.insert(Options::ENABLE_YAML_STYLE_METADATA_BLOCKS);
     options.insert(Options::ENABLE_PLUSES_DELIMITED_METADATA_BLOCKS);
     let mut inside = false;
