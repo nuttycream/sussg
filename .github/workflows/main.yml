@@ -1,5 +1,10 @@
 on:
   workflow_dispatch:
+  push:
+    branches:
+      - main
+    paths:
+      - docs/**
 
 env: 
   CARGO_TERM_COLOR: always
@@ -18,13 +23,15 @@ jobs:
 
       - name: run sussg and build static files
         id: build
-        run: cargo run --release -- build
+        run: |
+          cd docs/
+          cargo run --release -- build
 
       - name: upload static files as artifact
         id: deployment
         uses: actions/upload-pages-artifact@v3
         with: 
-          path: ./public
+          path: ./docs/public
 
   deploy:
     environment:
