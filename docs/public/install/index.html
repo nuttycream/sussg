@@ -1,0 +1,57 @@
+<link rel="stylesheet" href="/fonts.css">
+<link rel="stylesheet" href="/main.css">
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico">
+        <title>Installation</title>
+
+    </head>
+    <body>
+        <div class="container">
+            <nav>
+                <a href="/"><h3>Home</h3></a>
+                
+                <a class="nav-link" href="/install/">
+                    Installation
+                </a>
+                
+                <a class="nav-link" href="/usage/">
+                    Usage
+                </a>
+                
+            </nav>
+            <div class="content">
+                <h2>Installation</h2>
+<ul>
+<li>If you're on linux and use nixpkgs, then you're in luck! It's the only
+platform I support</li>
+<li>Just add this repo to your <code>inputs</code> like so:</li>
+</ul>
+<pre><code class="language-nix">inputs = {
+  ssusg.url = "github:nuttycream/sussg"
+};
+
+outputs = {
+  sussg,
+  ...
+}: 
+...
+</code></pre>
+<ul>
+<li>Then add the package to your shell:</li>
+</ul>
+<pre><code class="language-nix">packages = [
+  sussg.packages.${system}.default
+];
+</code></pre>
+<ul>
+<li><code>sussg</code> should now be available in your shell.</li>
+</ul>
+
+            </div>
+        </div>
+    </body>
+</html>

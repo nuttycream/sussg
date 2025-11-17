@@ -1,0 +1,41 @@
+body {
+  background-color: black;
+  color: white;
+  margin: auto;
+  font-family: "IBMPlexSans";
+}
+
+.container {
+  display: flex;
+  flex-direction: row;
+}
+
+.content {
+  padding: 20px;
+}
+
+a {
+  text-decoration: none;
+  color: limegreen;
+}
+
+a:hover {
+  color: coral;
+}
+
+nav {
+  display: flex;
+  flex-direction: column;
+  padding: 10px;
+  border-right: 2px solid slategray;
+}
+
+pre {
+  background-color: #0f0f0f;
+  padding: 10px;
+}
+
+code {
+  font-family: "Courier New", Courier, monospace;
+  font-size: 0.9em;
+}
