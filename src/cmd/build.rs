@@ -1,5 +1,4 @@
 use std::{
-    ffi::OsStr,
     fs::{self},
     path::Path,
 };
@@ -7,9 +6,12 @@ use std::{
 use minijinja::{Environment, context};
 use sussg::Post;
 
-use crate::{config::Config, errors::ErrDis, utils::*};
+use crate::{config::load_config, errors::ErrDis, utils::*};
 
-pub fn build(config: Config) -> Result<(), ErrDis> {
+pub fn build(path: &Path) -> Result<(), ErrDis> {
+    let config = load_config(path);
+    let main_path = path.to_path_buf();
+
     let output_dir = config.general.output_dir;
     let site_url = config.general.url;
 
@@ -18,17 +20,17 @@ pub fn build(config: Config) -> Result<(), ErrDis> {
         Err(e) => println!("somehow failed to create {output_dir}: {e}"),
     }
 
-    match read_static(Path::new(OsStr::new("./static"))) {
+    match read_static(&main_path.join("static")) {
         Ok(()) => {}
         Err(e) => return Err(ErrDis::BadStaticFiles(e.to_string())),
     }
 
-    let styles = match read_styles(Path::new(OsStr::new("./styles"))) {
+    let styles = match read_styles(&main_path.join("styles")) {
         Ok(s) => s,
         Err(e) => return Err(ErrDis::BadStyles(e.to_string())),
     };
 
-    let templates = match read_templates(Path::new(OsStr::new("./templates"))) {
+    let templates = match read_templates(&main_path.join("templates")) {
         Ok(m) => m,
         Err(e) => return Err(ErrDis::BadTemplates(e.to_string())),
     };
@@ -42,7 +44,7 @@ pub fn build(config: Config) -> Result<(), ErrDis> {
     }
 
     let content = match read_content(
-        Path::new(OsStr::new("./content")),
+        &main_path.join("content"),
         &styles,
         &templates,
         &config.style.main,

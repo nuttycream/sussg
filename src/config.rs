@@ -1,4 +1,4 @@
-use std::fs;
+use std::{fs, path::Path};
 
 use serde::{Deserialize, Serialize};
 
@@ -46,8 +46,11 @@ impl Default for Config {
 
 /// util to load config, if no config found
 /// use default
-pub fn load_config() -> Config {
-    match fs::read_to_string("config.toml") {
+pub fn load_config(path: &Path) -> Config {
+    let mut path = path.to_path_buf();
+    path.push("config.toml");
+
+    match fs::read_to_string(path) {
         Ok(cfg_string) => match toml::from_str(&cfg_string) {
             Ok(cfg) => cfg,
             Err(e) => {
