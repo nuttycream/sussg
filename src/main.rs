@@ -23,7 +23,10 @@ enum Commands {
         path: PathBuf,
     },
     Serve {
-        #[arg(short, long, default_value_t = 3030)]
+        #[arg(short, long, default_value = "./")]
+        path: PathBuf,
+
+        #[arg(long, default_value_t = 3030)]
         port: u32,
     },
 }
@@ -34,6 +37,6 @@ fn main() {
     match &args.command {
         Commands::Init => cmd::init::init(),
         Commands::Build { path } => cmd::build::build(path).unwrap(),
-        Commands::Serve { port } => cmd::serve::serve(*port),
+        Commands::Serve { path, port } => cmd::serve::serve(path, *port),
     }
 }

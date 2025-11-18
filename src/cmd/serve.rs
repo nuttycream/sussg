@@ -6,46 +6,14 @@ use tokio::signal;
 use tower_http::services::ServeDir;
 use tower_livereload::LiveReloadLayer;
 
-use crate::config::load_config;
-
 #[tokio::main]
-pub async fn serve(port: u32) {
+pub async fn serve(path: &Path, port: u32) {
     let livereload = LiveReloadLayer::new();
     let reloader = livereload.reloader();
 
-    let mut watcher = RecommendedWatcher::new(
-        move |result: Result<Event, Error>| {
-            let event = result.unwrap();
-
-            if event.kind.is_modify() {
-                let mut cfg = load_config();
-                cfg.general.url = "/".to_string();
-                let _ = crate::cmd::build::build(cfg).unwrap();
-                reloader.reload();
-            }
-        },
-        notify::Config::default(),
-    )
-    .unwrap();
-
-    let mut watch_these = watcher.paths_mut();
-    let paths: Vec<&Path> = vec![
-        Path::new("content"),
-        Path::new("styles"),
-        Path::new("static"),
-        Path::new("templates"),
-        Path::new("config.toml"),
-    ];
-
-    for path in paths {
-        watch_these.add(path, RecursiveMode::Recursive).unwrap();
-    }
-
     let static_files = ServeDir::new("./public");
 
-    let mut cfg = load_config();
-    cfg.general.url = "/".to_string();
-    let _ = crate::cmd::build::build(cfg).unwrap();
+    let _ = crate::cmd::build::build(path).unwrap();
 
     let app = Router::new()
         .fallback_service(static_files)
@@ -55,7 +23,37 @@ pub async fn serve(port: u32) {
         .await
         .unwrap();
 
+    let path = path.to_owned();
+    let main_path = path.clone();
+
+    let mut watcher = RecommendedWatcher::new(
+        move |result: Result<Event, Error>| {
+            let event = result.unwrap();
+
+            if event.kind.is_modify() {
+                let _ = crate::cmd::build::build(&path).unwrap();
+                reloader.reload();
+            }
+        },
+        notify::Config::default(),
+    )
+    .unwrap();
+
+    let mut watch_these = watcher.paths_mut();
+    let content = main_path.join("content");
+    let styles = main_path.join("styles");
+    let static_path = main_path.join("static");
+    let templates = main_path.join("templates");
+    let config_toml = main_path.join("config.toml");
+
+    let paths: Vec<&Path> = vec![&content, &styles, &static_path, &templates, &config_toml];
+
+    for path in paths {
+        watch_these.add(path, RecursiveMode::Recursive).unwrap();
+    }
+
     println!("listening on {}", listener.local_addr().unwrap());
+
     axum::serve(listener, app)
         .with_graceful_shutdown(shutdown_signal())
         .await
