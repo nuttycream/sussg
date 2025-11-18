@@ -1,3 +1,5 @@
 /target
+**/docs/public
 /public
 /result
+*.env
