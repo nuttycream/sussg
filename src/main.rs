@@ -4,6 +4,8 @@ pub mod convert;
 pub mod errors;
 pub mod utils;
 
+use std::path::PathBuf;
+
 use clap::{Parser, Subcommand};
 
 #[derive(Parser, Debug)]
@@ -16,9 +18,15 @@ struct Args {
 #[derive(Subcommand, Debug)]
 enum Commands {
     Init,
-    Build,
+    Build {
+        #[arg(short, long, default_value = "./")]
+        path: PathBuf,
+    },
     Serve {
-        #[arg(short, long, default_value_t = 3030)]
+        #[arg(short, long, default_value = "./")]
+        path: PathBuf,
+
+        #[arg(long, default_value_t = 3030)]
         port: u32,
     },
 }
@@ -26,11 +34,9 @@ enum Commands {
 fn main() {
     let args = Args::parse();
 
-    let cfg = config::load_config();
-
     match &args.command {
         Commands::Init => cmd::init::init(),
-        Commands::Build => cmd::build::build(cfg).unwrap(),
-        Commands::Serve { port } => cmd::serve::serve(*port),
+        Commands::Build { path } => cmd::build::build(path, false).unwrap(),
+        Commands::Serve { path, port } => cmd::serve::serve(path, *port),
     }
 }

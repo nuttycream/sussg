@@ -2,6 +2,7 @@ use crate::{convert::convert, errors::ErrDis};
 use std::{
     ffi::OsStr,
     fs,
+    os::linux::raw::stat,
     path::{Path, PathBuf},
 };
 
@@ -61,7 +62,7 @@ pub fn read_static(static_path: &Path) -> Result<(), ErrDis> {
     // maybe add some optimizations to images here? hmmmm?
     for static_file in WalkDir::new(static_path).into_iter().filter_map(|e| e.ok()) {
         let from = static_file.path();
-        let to = Path::new("./public").join(from.strip_prefix("./static").unwrap());
+        let to = Path::new("public").join(from.strip_prefix(static_path).unwrap());
 
         if static_file.file_type().is_dir() {
             match fs::create_dir_all(&to) {
@@ -125,11 +126,11 @@ pub fn read_styles(styles_path: &Path) -> Result<Vec<Style>, ErrDis> {
         println!("processing style:{}", path.display());
 
         style.path = path
-            .strip_prefix("./styles")
+            .strip_prefix(styles_path)
             .expect("Somehow failed to strip_prefix for ./styles")
             .to_path_buf();
 
-        let out = Path::new("./public").join(&style.path);
+        let out = Path::new("public").join(&style.path);
 
         fs::create_dir_all(
             out.parent()
@@ -190,8 +191,11 @@ fn read_page(
 
     println!("processing page:{}", page_path.display());
 
+    let mut content_path = page_path.to_path_buf();
+    content_path.pop();
+
     let path = page_path
-        .strip_prefix("./content")
+        .strip_prefix(content_path)
         .expect("Somehow failed to strip_prefix for ./content")
         .to_path_buf();
 
