@@ -8,8 +8,13 @@ use sussg::Post;
 
 use crate::{config::load_config, errors::ErrDis, utils::*};
 
-pub fn build(path: &Path) -> Result<(), ErrDis> {
-    let config = load_config(path);
+pub fn build(path: &Path, is_local: bool) -> Result<(), ErrDis> {
+    let mut config = load_config(path);
+
+    if is_local {
+        config.general.url = "/".to_owned();
+    }
+
     let main_path = path.to_path_buf();
 
     let output_dir = config.general.output_dir;

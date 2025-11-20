@@ -13,7 +13,7 @@ pub async fn serve(path: &Path, port: u32) {
 
     let static_files = ServeDir::new("./public");
 
-    let _ = crate::cmd::build::build(path).unwrap();
+    let _ = crate::cmd::build::build(path, true).unwrap();
 
     let app = Router::new()
         .fallback_service(static_files)
@@ -31,7 +31,7 @@ pub async fn serve(path: &Path, port: u32) {
             let event = result.unwrap();
 
             if event.kind.is_modify() {
-                let _ = crate::cmd::build::build(&path).unwrap();
+                let _ = crate::cmd::build::build(&path, true).unwrap();
                 reloader.reload();
             }
         },
