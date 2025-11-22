@@ -110,6 +110,7 @@ pub fn build(path: &Path, is_local: bool) -> Result<(), ErrDis> {
             title => thing.frontmatter.title,
             content => thing.content,
             frontmatter => thing.frontmatter,
+            headings => thing.headings,
             posts,
             most_recent,
             site_url
