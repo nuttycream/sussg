@@ -66,7 +66,7 @@ pub struct TheThing {
 }
 
 /// Heading for toc info
-#[derive(Debug)]
+#[derive(Debug, Deserialize, Serialize)]
 pub struct Heading {
     pub level: u8,
     pub text: String,
