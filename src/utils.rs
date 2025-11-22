@@ -2,11 +2,10 @@ use crate::{convert::convert, errors::ErrDis};
 use std::{
     ffi::OsStr,
     fs,
-    os::linux::raw::stat,
     path::{Path, PathBuf},
 };
 
-use sussg::{Frontmatter, Style, Template, TheThing};
+use sussg::{Frontmatter, Heading, Style, Template, TheThing};
 use walkdir::WalkDir;
 
 /// neat helper func specific for posts
@@ -184,8 +183,8 @@ fn read_page(
     main_styles: &Vec<String>,
     base_template: &str,
 ) -> Result<TheThing, ErrDis> {
-    let (frontmatter, html_output) = match read_markdown(page_path) {
-        Ok((fm, c)) => (fm, c),
+    let (frontmatter, html_output, headings) = match read_markdown(page_path) {
+        Ok((fm, c, h)) => (fm, c, h),
         Err(e) => return Err(ErrDis::BadMarkdown(e.to_string())),
     };
 
@@ -247,20 +246,21 @@ fn read_page(
         template: mustache,
         content: html_output,
         is_post,
+        headings,
     })
 }
 
-fn read_markdown(path: &Path) -> Result<(Frontmatter, String), ErrDis> {
+fn read_markdown(path: &Path) -> Result<(Frontmatter, String, Vec<Heading>), ErrDis> {
     let md_string = match fs::read_to_string(path) {
         Ok(md) => md,
         Err(e) => return Err(ErrDis::BadMarkdownString(e.to_string())),
     };
 
-    let (frontmatter_string, html_output) = convert(&md_string);
+    let (frontmatter_string, html_output, headings) = convert(&md_string);
     let frontmatter: Frontmatter = match serde_yaml::from_str(&frontmatter_string) {
         Ok(fm) => fm,
         Err(e) => return Err(ErrDis::BadFrontmatter(frontmatter_string, e.to_string())),
     };
 
-    Ok((frontmatter, html_output))
+    Ok((frontmatter, html_output, headings))
 }

@@ -62,4 +62,13 @@ pub struct TheThing {
     pub template: Template,
     pub content: String,
     pub is_post: bool,
+    pub headings: Vec<Heading>,
+}
+
+/// Heading for toc info
+#[derive(Debug)]
+pub struct Heading {
+    pub level: u8,
+    pub text: String,
+    pub id: String,
 }
