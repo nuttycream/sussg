@@ -2,6 +2,8 @@ use pulldown_cmark::{Event, MetadataBlockKind, Options, Tag as TagStart, TagEnd}
 use slug::slugify;
 use sussg::Heading;
 
+use crate::post_process::post_process;
+
 pub fn convert(md_string: &str) -> (String, String, Vec<Heading>) {
     let mut options = Options::empty();
     options.insert(Options::ENABLE_HEADING_ATTRIBUTES);
@@ -73,8 +75,11 @@ pub fn convert(md_string: &str) -> (String, String, Vec<Heading>) {
 
     let mut html_output = String::new();
     pulldown_cmark::html::push_html(&mut html_output, parser);
+
+    html_output = post_process(&html_output, &headings);
+
     //println!("{html_output}");
-    println!("headings: {:#?}", headings);
+    //println!("headings: {:#?}", headings);
 
     (frontmatter, html_output, headings)
 }

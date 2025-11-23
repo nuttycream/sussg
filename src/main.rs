@@ -2,6 +2,7 @@ pub mod cmd;
 pub mod config;
 pub mod convert;
 pub mod errors;
+pub mod post_process;
 pub mod utils;
 
 use std::path::PathBuf;
