@@ -23,6 +23,7 @@ pub struct Post {
     pub url: String,
     pub description: Option<String>,
     pub date: Option<String>,
+    pub headings: Vec<Heading>,
 }
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
@@ -66,7 +67,7 @@ pub struct TheThing {
 }
 
 /// Heading for toc info
-#[derive(Debug, Deserialize, Serialize)]
+#[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct Heading {
     pub level: u8,
     pub text: String,
