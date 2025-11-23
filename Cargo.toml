@@ -11,6 +11,7 @@ notify = { version = "8.2.0", default-features = false }
 pulldown-cmark = { version = "0.13.0", features = ["html"] }
 serde = { version = "1.0.219", features = ["derive"] }
 serde_yaml = { version = "0.9.34", default-features = false }
+slug = { version = "0.1.6", default-features = false }
 tokio = { version = "1.47.1", default-features = false, features = ["signal", "fs", "rt-multi-thread"] }  
 toml = { version = "0.9.5", default-features = false, features = ["serde", "parse", "display"] }
 tower-http = { version = "0.6.6", default-features = false, features = ["timeout", "trace", "fs"] }  
