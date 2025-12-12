@@ -37,6 +37,8 @@ pub struct Frontmatter {
     /// GOD IM A GENIUS
     pub is_post: Option<bool>, // defaults to false
 
+    pub is_archived: Option<bool>,
+
     /// can be optional,
     /// it will still inherit base.html
     /// unless overriden
