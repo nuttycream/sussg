@@ -10,10 +10,11 @@ better generator, please use [Zola](https://www.getzola.org).
 If you're still here, then this is a no frills/barebones static site generator.
 While other SSG's tout bloated features like cdn support, image processing,
 taxonomies, and decent programming. Realistically, you don't need all that and
-let's not kid ourselves, there's not gonna be that many people visiting your site. 
+let's not kid ourselves, there's not gonna be that many people visiting your
+site.
 
-Well then why not just build out your entire site in raw html? You might ask, which
-I'll reply with: good question, because well uhhh
+Well then why not just build out your entire site in raw html? You might ask,
+which I'll reply with: good question, because well uhhh
 
 ## Features
 
