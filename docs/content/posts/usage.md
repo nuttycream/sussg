@@ -1,7 +1,6 @@
 ---
 title: Usage
 description: usage
-is_post: true
 ---
 
 ## Usage

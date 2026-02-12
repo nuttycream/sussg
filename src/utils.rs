@@ -237,7 +237,11 @@ fn read_page(
         None => {}
     }
 
-    let is_post = frontmatter.is_post.is_some_and(|b| b == true);
+    let is_post = Path::new(page_path)
+        .components()
+        .next()
+        .and_then(|c| c.as_os_str().to_str())
+        .is_some_and(|segment| segment == "posts");
 
     Ok(TheThing {
         path,
