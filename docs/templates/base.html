@@ -12,7 +12,7 @@
             <nav>
                 <a href="{{ site_url }}"><h3>Home</h3></a>
                 <ul class="nav-list">
-                    {% for post in posts %}
+                    {% for post in sections.posts %}
                     <li class="nav-item">
                         <a class="nav-link" href="{{ post.url }}">{{ post.title }}</a>
                         {% if post.headings %}
