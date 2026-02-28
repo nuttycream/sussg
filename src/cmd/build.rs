@@ -1,10 +1,11 @@
 use std::{
+    collections::HashMap,
     fs::{self},
     path::Path,
 };
 
 use minijinja::{Environment, context};
-use sussg::Post;
+use sussg::SectionThing;
 
 use crate::{config::load_config, errors::ErrDis, utils::*};
 
@@ -59,25 +60,28 @@ pub fn build(path: &Path, is_local: bool) -> Result<(), ErrDis> {
         Err(e) => return Err(ErrDis::BadContent(e.to_string())),
     };
 
-    //println!("avail_styles:{:?}", styles);
-    //println!("avail_templs:{:?}", mustaches);
-    //println!("content:{:?}", content);
+    // key is the content_dir_name
+    let mut sections: HashMap<String, Vec<SectionThing>> = HashMap::new();
 
-    let mut posts = Vec::new();
-    for thing in content.iter().clone() {
-        if thing.is_post {
-            let frontmatter = thing.frontmatter.clone();
+    for thing in content.iter() {
+        if let Some(ref section) = thing.section {
             let url = get_post_url(&site_url, &thing.path);
 
-            posts.push(Post {
-                title: frontmatter.title,
+            let entry = sections.entry(section.to_owned()).or_default();
+
+            entry.push(SectionThing {
+                title: thing.frontmatter.title.to_owned(),
                 url,
-                description: frontmatter.description,
-                date: frontmatter.date,
+                description: thing.frontmatter.description.to_owned(),
+                date: thing.frontmatter.date.to_owned(),
                 headings: thing.headings.to_owned(),
             });
         }
     }
+
+    //println!("avail_styles:{:?}", styles);
+    //println!("avail_templs:{:?}", mustaches);
+    //println!("content:{:?}", content);
 
     for thing in content {
         // this is where we'll start to populate
@@ -85,13 +89,12 @@ pub fn build(path: &Path, is_local: bool) -> Result<(), ErrDis> {
 
         println!("creating:{}", thing.path.display());
 
-        let most_recent = posts
-            .last()
-            .unwrap_or(&Post {
-                title: "no posts".to_string(),
-                ..Default::default()
-            })
-            .clone();
+        // most recent maps to sections like so:
+        // {{ most_recent.posts.title }}
+        let most_recent: HashMap<String, SectionThing> = sections
+            .iter()
+            .filter_map(|(name, items)| items.first().cloned().map(|item| (name.clone(), item)))
+            .collect();
 
         let mut link = String::new();
         for style in &thing.styles {
@@ -112,7 +115,7 @@ pub fn build(path: &Path, is_local: bool) -> Result<(), ErrDis> {
             content => thing.content,
             frontmatter => thing.frontmatter,
             headings => thing.headings,
-            posts,
+            sections,
             most_recent,
             site_url
         }) {

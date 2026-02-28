@@ -18,7 +18,7 @@ pub struct Template {
 // this should all be gathered
 // from the frontmatter
 #[derive(Clone, Default, Serialize)]
-pub struct Post {
+pub struct SectionThing {
     pub title: String,
     pub url: String,
     pub description: Option<String>,
@@ -29,13 +29,6 @@ pub struct Post {
 #[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct Frontmatter {
     pub title: String,
-
-    /// putting the post thingymajig here
-    /// I can iterate through all pages
-    /// then collect the posts using this bool
-    /// without having to use a specific post/ dir
-    /// GOD IM A GENIUS
-    pub is_post: Option<bool>, // defaults to false
 
     pub is_archived: Option<bool>,
 
@@ -64,7 +57,11 @@ pub struct TheThing {
     pub styles: Vec<Style>,
     pub template: Template,
     pub content: String,
-    pub is_post: bool,
+    /// store content dir names as sections
+    /// content/posts, content/pages, etc
+    /// so that they can be accessed by the
+    /// minijinja context
+    pub section: Option<String>,
     pub headings: Vec<Heading>,
 }
 

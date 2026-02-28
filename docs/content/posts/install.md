@@ -1,7 +1,6 @@
 ---
 title: Installation
 description: install
-is_post: true
 ---
 
 ## Installation

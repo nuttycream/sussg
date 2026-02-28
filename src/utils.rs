@@ -89,11 +89,17 @@ pub fn read_content(
         .filter_map(|e| e.ok())
     {
         if content.path().extension() == Some(OsStr::new("md")) {
-            let thing =
-                match read_page(content.path(), styles, mustaches, main_style, base_template) {
-                    Ok(thing) => thing,
-                    Err(e) => return Err(ErrDis::BadPage(e.to_string())),
-                };
+            let thing = match read_page(
+                content.path(),
+                content_root_path,
+                styles,
+                mustaches,
+                main_style,
+                base_template,
+            ) {
+                Ok(thing) => thing,
+                Err(e) => return Err(ErrDis::BadPage(e.to_string())),
+            };
 
             things.push(thing);
         }
@@ -178,6 +184,7 @@ pub fn read_templates(template_path: &Path) -> Result<Vec<Template>, ErrDis> {
 
 fn read_page(
     page_path: &Path,
+    content_root_path: &Path,
     avail_styles: &Vec<Style>,
     avail_templs: &Vec<Template>,
     main_styles: &Vec<String>,
@@ -190,13 +197,22 @@ fn read_page(
 
     println!("processing page:{}", page_path.display());
 
-    let mut content_path = page_path.to_path_buf();
-    content_path.pop();
-
     let path = page_path
-        .strip_prefix(content_path)
+        .strip_prefix(content_root_path)
         .expect("Somehow failed to strip_prefix for ./content")
         .to_path_buf();
+
+    // get the page dir name
+    // this would map to None
+    // if the path is root like content/
+    let section = if path.components().count() > 1 {
+        path.components()
+            .next()
+            .and_then(|c| c.as_os_str().to_str())
+            .map(|s| s.to_string())
+    } else {
+        None
+    };
 
     let styles: Vec<Style> = {
         let mut styles = Vec::new();
@@ -237,15 +253,13 @@ fn read_page(
         None => {}
     }
 
-    let is_post = frontmatter.is_post.is_some_and(|b| b == true);
-
     Ok(TheThing {
         path,
         frontmatter,
         styles,
         template: mustache,
         content: html_output,
-        is_post,
+        section,
         headings,
     })
 }
