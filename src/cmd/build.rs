@@ -42,6 +42,8 @@ pub fn build(path: &Path, is_local: bool) -> Result<(), ErrDis> {
     };
 
     let mut env = Environment::new();
+    minijinja_contrib::add_to_environment(&mut env);
+
     for template in &templates {
         match env.add_template(&template.name, &template.template) {
             Ok(_) => println!("added template: {} to environment", template.name),
