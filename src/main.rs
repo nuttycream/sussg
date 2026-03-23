@@ -38,6 +38,6 @@ fn main() {
     match &args.command {
         Commands::Init => cmd::init::init(),
         Commands::Build { path } => cmd::build::build(path, false).unwrap(),
-        Commands::Serve { path, port } => cmd::serve::serve(path, *port),
+        Commands::Serve { path, port } => cmd::serve::serve(path, *port).unwrap(),
     }
 }
