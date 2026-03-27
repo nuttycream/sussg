@@ -18,10 +18,7 @@ pub fn get_post_url(site_url: &str, content_path: &Path) -> String {
         .strip_prefix("./public")
         .expect("somehow failed to strip ./public from rel_path");
 
-    let base_path = url::Url::parse(site_url)
-        .ok()
-        .map(|u| u.path().trim_end_matches('/').to_string())
-        .unwrap_or_else(|| String::new());
+    let base_path = extract_url_path(site_url);
 
     if relative_path.file_name() == Some(OsStr::new("index.html")) {
         let parent = relative_path
@@ -277,4 +274,21 @@ fn read_markdown(path: &Path) -> Result<(Frontmatter, String, Vec<Heading>), Err
     };
 
     Ok((frontmatter, html_output, headings))
+}
+
+/// find the :// then the next / after the main
+fn extract_url_path(site_url: &str) -> String {
+    if let Some(scheme_end) = site_url.find("://") {
+        let after_scheme = &site_url[scheme_end + 3..];
+        if let Some(slash_pos) = after_scheme.find('/') {
+            let path = &after_scheme[slash_pos..];
+            path.trim_end_matches('/').to_string()
+        } else {
+            // no path, just use root
+            String::new()
+        }
+    } else {
+        // no path, use root
+        String::new()
+    }
 }
