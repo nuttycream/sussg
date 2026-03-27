@@ -4,14 +4,11 @@ version = "0.1.0"
 edition = "2024"
 
 [dependencies]
-clap = { version = "4.5.45", features = ["derive"] }
 minijinja = { version = "2.12.0", default-features = false, features = ["multi_template", "serde", "macros", "builtins"] }  
 minijinja-contrib = { version = "2.18.0", features = ["datetime", "textwrap"] }
-notify = { version = "8.2.0", default-features = false }  
 pulldown-cmark = { version = "0.13.0", features = ["html"] }
 serde = { version = "1.0.219", features = ["derive"] }
 serde_yaml = { version = "0.9.34", default-features = false }
 slug = { version = "0.1.6", default-features = false }
 toml = { version = "0.9.5", default-features = false, features = ["serde", "parse", "display"] }
-url = {version = "2.5.7", default-features = false}  
 walkdir = "2.5.0"  
