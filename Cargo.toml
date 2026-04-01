@@ -8,7 +8,6 @@ minijinja = { version = "2.12.0", default-features = false, features = ["multi_t
 minijinja-contrib = { version = "2.18.0", features = ["datetime", "textwrap"] }
 pulldown-cmark = { version = "0.13.0", features = ["html"] }
 serde = { version = "1.0.228", default-features = false, features = ["derive"] }
-serde-saphyr = { version = "0.0.23", default-features = false, features = ["deserialize"] }
 slug = { version = "0.1.6", default-features = false }
 toml = { version = "0.9.5", default-features = false, features = ["serde", "parse", "display"] }
 walkdir = "2.5.0"  

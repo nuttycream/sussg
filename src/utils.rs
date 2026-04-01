@@ -268,7 +268,7 @@ fn read_markdown(path: &Path) -> Result<(Frontmatter, String, Vec<Heading>), Err
     };
 
     let (frontmatter_string, html_output, headings) = convert(&md_string);
-    let frontmatter: Frontmatter = match serde_saphyr::from_str(&frontmatter_string) {
+    let frontmatter: Frontmatter = match toml::from_str(&frontmatter_string) {
         Ok(fm) => fm,
         Err(e) => return Err(ErrDis::BadFrontmatter(frontmatter_string, e.to_string())),
     };
