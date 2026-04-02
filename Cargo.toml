@@ -6,6 +6,7 @@ edition = "2024"
 [dependencies]
 minijinja = { version = "2.12.0", default-features = false, features = ["multi_template", "serde", "macros", "builtins"] }  
 minijinja-contrib = { version = "2.18.0", features = ["datetime", "textwrap"] }
+pico-args = { version = "0.5.0", default-features = false }
 pulldown-cmark = { version = "0.13.0", features = ["html"] }
 serde = { version = "1.0.228", default-features = false, features = ["derive"] }
 slug = { version = "0.1.6", default-features = false }
