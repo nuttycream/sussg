@@ -7,58 +7,91 @@ pub mod utils;
 
 use std::path::PathBuf;
 
-fn usage() {
-    println!("usage:");
-    println!("sussg init");
-    println!("sussg build [-p|--path <path>]");
-    println!("sussg serve [-p|--path <path>] [--port <port>]");
+const HELP: &str = "\
+sussg - a simple static site generator
+
+USAGE:
+  sussg <COMMAND> [OPTIONS]
+
+COMMANDS:
+  init                  initialize a new site
+  build                 build the site
+  serve                 build and serve the site
+
+OPTIONS:
+  -h, --help            print this
+  -p, --path PATH       specify site path [default: ./]
+  --port PORT           specify port [default: 3030]
+";
+
+#[derive(Debug)]
+enum Command {
+    Init,
+    Build { path: PathBuf },
+    Serve { path: PathBuf, port: u32 },
+}
+
+fn parse_args() -> Result<Command, pico_args::Error> {
+    let mut pargs = pico_args::Arguments::from_env();
+
+    if pargs.contains(["-h", "--help"]) {
+        print!("{}", HELP);
+        std::process::exit(0);
+    }
+
+    let subcommand = pargs.subcommand()?;
+    let cmd = match subcommand.as_deref() {
+        Some("init") => Command::Init,
+        Some("build") => {
+            let path: PathBuf = pargs
+                .opt_value_from_str(["-p", "--path"])?
+                .unwrap_or_else(|| PathBuf::from("./"));
+
+            Command::Build { path }
+        }
+        Some("serve") => {
+            let path: PathBuf = pargs
+                .opt_value_from_str(["-p", "--path"])?
+                .unwrap_or_else(|| PathBuf::from("./"));
+            let port: u32 = pargs.opt_value_from_str("--port")?.unwrap_or(3030);
+            Command::Serve { path, port }
+        }
+        Some(other) => {
+            eprintln!("unknown command: {other}");
+            print!("{}", HELP);
+            std::process::exit(1);
+        }
+        None => {
+            print!("{}", HELP);
+            std::process::exit(1);
+        }
+    };
+
+    let remaining = pargs.finish();
+
+    if !remaining.is_empty() {
+        println!("unused arguments left: {:?}.", remaining);
+    }
+
+    Ok(cmd)
 }
 
 fn main() {
-    let args = std::env::args().collect::<Vec<String>>();
+    let cmd = match parse_args() {
+        Ok(v) => v,
+        Err(e) => {
+            eprintln!("Error: {}.", e);
+            std::process::exit(1);
+        }
+    };
 
-    if args.len() < 2 {
-        usage();
-        return;
-    }
-
-    match args[1].as_str() {
-        "init" => cmd::init::init(),
-        "build" => {
-            let path = path_arg(&args[2..]).unwrap_or_else(|| PathBuf::from("./"));
-
+    match cmd {
+        Command::Init => cmd::init::init(),
+        Command::Build { path } => {
             cmd::build::build(&path, false).unwrap();
         }
-        "serve" => {
-            let path = path_arg(&args[2..]).unwrap_or_else(|| PathBuf::from("./"));
-
-            let port = port_arg(&args[2..]).unwrap_or(3030);
-
+        Command::Serve { path, port } => {
             cmd::serve::serve(&path, port).unwrap();
         }
-        other => {
-            println!("unknown cmd: {other}");
-            usage();
-        }
     }
-}
-
-fn path_arg(args: &[String]) -> Option<PathBuf> {
-    args.windows(2).find_map(|pair| {
-        if pair[0] == "-p" || pair[0] == "--path" {
-            Some(PathBuf::from(&pair[1]))
-        } else {
-            None
-        }
-    })
-}
-
-fn port_arg(args: &[String]) -> Option<u32> {
-    args.windows(2).find_map(|pair| {
-        if pair[0] == "--port" {
-            pair[1].parse().ok()
-        } else {
-            None
-        }
-    })
 }
