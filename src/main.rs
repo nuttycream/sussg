@@ -21,13 +21,14 @@ COMMANDS:
 OPTIONS:
   -h, --help            print this
   -p, --path PATH       specify site path [default: ./]
+  -l, --local           build site with local site_url aka root url: \"/\"
   --port PORT           specify port [default: 3030]
 ";
 
 #[derive(Debug)]
 enum Command {
     Init,
-    Build { path: PathBuf },
+    Build { path: PathBuf, local: bool },
     Serve { path: PathBuf, port: u32 },
 }
 
@@ -47,7 +48,11 @@ fn parse_args() -> Result<Command, pico_args::Error> {
                 .opt_value_from_str(["-p", "--path"])?
                 .unwrap_or_else(|| PathBuf::from("./"));
 
-            Command::Build { path }
+            let local = pargs
+                .opt_value_from_str(["-l", "--local"])?
+                .unwrap_or(false);
+
+            Command::Build { path, local }
         }
         Some("serve") => {
             let path: PathBuf = pargs
@@ -87,8 +92,8 @@ fn main() {
 
     match cmd {
         Command::Init => cmd::init::init(),
-        Command::Build { path } => {
-            cmd::build::build(&path, false).unwrap();
+        Command::Build { path, local } => {
+            cmd::build::build(&path, local).unwrap();
         }
         Command::Serve { path, port } => {
             cmd::serve::serve(&path, port).unwrap();
