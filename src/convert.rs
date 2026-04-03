@@ -1,8 +1,7 @@
 use pulldown_cmark::{Event, MetadataBlockKind, Options, Tag as TagStart, TagEnd};
-use slug::slugify;
 use sussg::Heading;
 
-use crate::post_process::post_process;
+use crate::{post_process::post_process, utils};
 
 pub fn convert(md_string: &str) -> (String, String, Vec<Heading>) {
     let mut options = Options::empty();
@@ -48,7 +47,7 @@ pub fn convert(md_string: &str) -> (String, String, Vec<Heading>) {
                         id: if let Some(id) = &curr_heading_id {
                             id.to_owned()
                         } else {
-                            slugify(curr_heading_str.to_owned())
+                            utils::slugify(&curr_heading_str.to_owned())
                         },
                     });
 
