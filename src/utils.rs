@@ -179,6 +179,39 @@ pub fn read_templates(template_path: &Path) -> Result<Vec<Template>, ErrDis> {
     Ok(mustaches)
 }
 
+/// simplified version of the original slug::slugify
+/// in the slug-rs crate
+pub fn slugify(s: &str) -> String {
+    let mut slug = String::with_capacity(s.len());
+
+    // true to avoid leading -
+    let mut prev_is_dash = true;
+
+    for c in s.chars() {
+        match c {
+            'a'..='z' | '0'..='9' => {
+                prev_is_dash = false;
+                slug.push(c);
+            }
+            'A'..='Z' => {
+                prev_is_dash = false;
+                slug.push(c.to_ascii_lowercase());
+            }
+            _ => {
+                if !prev_is_dash {
+                    slug.push('-');
+                    prev_is_dash = true;
+                }
+            }
+        }
+    }
+
+    if slug.ends_with('-') {
+        slug.pop();
+    }
+    slug
+}
+
 fn read_page(
     page_path: &Path,
     content_root_path: &Path,
