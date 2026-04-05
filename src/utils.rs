@@ -18,10 +18,7 @@ pub fn get_post_url(site_url: &str, content_path: &Path) -> String {
         .strip_prefix("./public")
         .expect("somehow failed to strip ./public from rel_path");
 
-    let base_path = url::Url::parse(site_url)
-        .ok()
-        .map(|u| u.path().trim_end_matches('/').to_string())
-        .unwrap_or_else(|| String::new());
+    let base_path = extract_url_path(site_url);
 
     if relative_path.file_name() == Some(OsStr::new("index.html")) {
         let parent = relative_path
@@ -182,6 +179,39 @@ pub fn read_templates(template_path: &Path) -> Result<Vec<Template>, ErrDis> {
     Ok(mustaches)
 }
 
+/// simplified version of the original slug::slugify
+/// in the slug-rs crate
+pub fn slugify(s: &str) -> String {
+    let mut slug = String::with_capacity(s.len());
+
+    // true to avoid leading -
+    let mut prev_is_dash = true;
+
+    for c in s.chars() {
+        match c {
+            'a'..='z' | '0'..='9' => {
+                prev_is_dash = false;
+                slug.push(c);
+            }
+            'A'..='Z' => {
+                prev_is_dash = false;
+                slug.push(c.to_ascii_lowercase());
+            }
+            _ => {
+                if !prev_is_dash {
+                    slug.push('-');
+                    prev_is_dash = true;
+                }
+            }
+        }
+    }
+
+    if slug.ends_with('-') {
+        slug.pop();
+    }
+    slug
+}
+
 fn read_page(
     page_path: &Path,
     content_root_path: &Path,
@@ -271,10 +301,27 @@ fn read_markdown(path: &Path) -> Result<(Frontmatter, String, Vec<Heading>), Err
     };
 
     let (frontmatter_string, html_output, headings) = convert(&md_string);
-    let frontmatter: Frontmatter = match serde_yaml::from_str(&frontmatter_string) {
+    let frontmatter: Frontmatter = match toml::from_str(&frontmatter_string) {
         Ok(fm) => fm,
         Err(e) => return Err(ErrDis::BadFrontmatter(frontmatter_string, e.to_string())),
     };
 
     Ok((frontmatter, html_output, headings))
+}
+
+/// find the :// then the next / after the main
+fn extract_url_path(site_url: &str) -> String {
+    if let Some(scheme_end) = site_url.find("://") {
+        let after_scheme = &site_url[scheme_end + 3..];
+        if let Some(slash_pos) = after_scheme.find('/') {
+            let path = &after_scheme[slash_pos..];
+            path.trim_end_matches('/').to_string()
+        } else {
+            // no path, just use root
+            String::new()
+        }
+    } else {
+        // no path, use root
+        String::new()
+    }
 }

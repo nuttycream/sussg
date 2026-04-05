@@ -1,6 +1,6 @@
 ---
-title: Installation
-description: install
+title="Installation"
+description="install"
 ---
 
 ## Installation
@@ -17,7 +17,7 @@ inputs = {
 outputs = {
   sussg,
   ...
-}: 
+}:
 ...
 ```
 

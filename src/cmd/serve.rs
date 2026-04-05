@@ -1,85 +1,167 @@
-use std::path::Path;
+use std::{
+    collections::HashMap,
+    fs,
+    io::{BufRead, BufReader, Write},
+    net::TcpListener,
+    path::{Path, PathBuf},
+    sync::mpsc,
+    thread,
+    time::{Duration, SystemTime},
+};
+use walkdir::WalkDir;
 
-use axum::Router;
-use notify::{Error, Event, RecommendedWatcher, RecursiveMode, Watcher};
-use tokio::signal;
-use tower_http::services::ServeDir;
-use tower_livereload::LiveReloadLayer;
+const POLL_RATE_MS: Duration = Duration::from_millis(50);
+const PATHS_TO_WATCH: &[&str] = &["templates", "styles", "content", "static", "config.toml"];
 
-#[tokio::main]
-pub async fn serve(path: &Path, port: u32) {
-    let livereload = LiveReloadLayer::new();
-    let reloader = livereload.reloader();
+pub fn serve(content_path: &Path, port: u32, out: Option<&Path>) -> std::io::Result<()> {
+    let _ = crate::cmd::build::build(content_path, true, out);
 
-    let static_files = ServeDir::new("./public");
+    let public_dir = PathBuf::from("./public");
+    let rx = watch_for_changes(content_path);
+    let content_path = content_path.to_owned();
+    let out = out.map(|p| p.to_owned());
 
-    let _ = crate::cmd::build::build(path, true).unwrap();
+    println!(
+        "serving from: {}\nwatching for changes in:\n{}",
+        public_dir.canonicalize()?.display(),
+        PATHS_TO_WATCH.join("\n")
+    );
 
-    let app = Router::new()
-        .fallback_service(static_files)
-        .layer(livereload);
+    let listener = TcpListener::bind(format!("127.0.0.1:{}", port))?;
+    println!("listening on http://127.0.0.1:{}", port);
 
-    let listener = tokio::net::TcpListener::bind(format!("127.0.0.1:{port}"))
-        .await
-        .unwrap();
+    thread::spawn(move || {
+        for _ in rx {
+            println!("change detected, rebuilding...");
+            let _ = crate::cmd::build::build(&content_path, true, out.as_deref());
+        }
+    });
 
-    let path = path.to_owned();
-    let main_path = path.clone();
+    for stream in listener.incoming() {
+        let mut stream = stream?;
+        let buf_reader = BufReader::new(&stream);
 
-    let mut watcher = RecommendedWatcher::new(
-        move |result: Result<Event, Error>| {
-            let event = result.unwrap();
+        // we only care about the first request line
+        let req_line = match buf_reader.lines().next() {
+            Some(Ok(line)) => line,
+            _ => continue,
+        };
 
-            if event.kind.is_modify() {
-                let _ = crate::cmd::build::build(&path, true).unwrap();
-                reloader.reload();
+        //println!("{req_line}");
+
+        let req_path = req_line.split_whitespace().nth(1).unwrap_or("/");
+
+        let mut file_path = public_dir.join(req_path.trim_start_matches('/'));
+
+        // given dir:
+        //  ➜ tree public
+        // public
+        // ├── favicon.ico
+        // ├── fonts
+        // │   └── IBMPlexSans.ttf
+        // ├── fonts.css
+        // ├── index.html
+        // ├── main.css
+        // ├── posts
+        // │   ├── install
+        // │   │   └── index.html
+        // │   └── usage
+        // │       └── index.html
+        // └── sussg.svg
+        if file_path.is_dir() {
+            file_path.push("index.html");
+        }
+
+        match fs::read(&file_path) {
+            Ok(contents) => {
+                let mime = mime(&file_path);
+                let header = format!(
+                    "HTTP/1.1 200 OK\r\nContent-Type: {}\r\nContent-Length: {}\r\n\r\n",
+                    mime,
+                    contents.len(),
+                );
+
+                stream.write_all(header.as_bytes())?;
+                stream.write_all(&contents)?;
             }
-        },
-        notify::Config::default(),
-    )
-    .unwrap();
+            Err(_) => {
+                let body = "404 Not Found";
+                let response = format!(
+                    "HTTP/1.1 404 Not Found\r\nContent-Length: {}\r\n\r\n{}",
+                    body.len(),
+                    body
+                );
 
-    let mut watch_these = watcher.paths_mut();
-    let content = main_path.join("content");
-    let styles = main_path.join("styles");
-    let static_path = main_path.join("static");
-    let templates = main_path.join("templates");
-    let config_toml = main_path.join("config.toml");
-
-    let paths: Vec<&Path> = vec![&content, &styles, &static_path, &templates, &config_toml];
-
-    for path in paths {
-        watch_these.add(path, RecursiveMode::Recursive).unwrap();
+                stream.write_all(response.as_bytes())?;
+            }
+        }
     }
 
-    println!("listening on {}", listener.local_addr().unwrap());
-
-    axum::serve(listener, app)
-        .with_graceful_shutdown(shutdown_signal())
-        .await
-        .unwrap();
+    Ok(())
 }
 
-async fn shutdown_signal() {
-    let ctrl_c = async {
-        signal::ctrl_c()
-            .await
-            .expect("failed to install Ctrl+C handler");
-    };
+fn watch_for_changes(content_path: &Path) -> mpsc::Receiver<bool> {
+    let (tx, rx) = mpsc::channel();
+    let content_path = content_path.to_owned();
 
-    #[cfg(unix)]
-    let terminate = async {
-        signal::unix::signal(signal::unix::SignalKind::terminate())
-            .expect("failed to install signal handler")
-            .recv()
-            .await;
-    };
+    thread::spawn(move || {
+        let mut previous = check_metadata(&content_path).unwrap();
 
-    #[cfg(not(unix))]
-    let terminate = std::future::pending::<()>();
+        loop {
+            thread::sleep(POLL_RATE_MS);
+            let curr = check_metadata(&content_path).unwrap();
+            for (path, modified) in &curr {
+                match previous.get(path) {
+                    None => {
+                        tx.send(true).ok();
+                    }
+                    Some(old) if *old != *modified => {
+                        tx.send(true).ok();
+                    }
+                    _ => {}
+                }
+            }
 
-    tokio::select! {
-        _ = ctrl_c => {},
-        _ = terminate => {},
+            previous = curr;
+        }
+    });
+
+    rx
+}
+
+fn check_metadata(path: &Path) -> std::io::Result<HashMap<PathBuf, SystemTime>> {
+    let mut map = HashMap::new();
+
+    for entry in WalkDir::new(path)
+        .follow_links(true)
+        .follow_root_links(true)
+    {
+        let path = entry?.path().to_owned();
+        let modified = fs::metadata(&path)?.modified()?;
+
+        map.insert(path, modified);
+
+        //println!("{:#?}", metadata.modified()?);
+    }
+
+    Ok(map)
+}
+
+fn mime(path: &Path) -> &'static str {
+    match path.extension().and_then(|e| e.to_str()) {
+        Some("html") => "text/html; charset=utf-8",
+        Some("css") => "text/css; charset=utf-8",
+        Some("js") => "application/javascript; charset=utf-8",
+        Some("json") => "application/json",
+        Some("png") => "image/png",
+        Some("jpg") | Some("jpeg") => "image/jpeg",
+        Some("gif") => "image/gif",
+        Some("svg") => "image/svg+xml",
+        Some("ico") => "image/x-icon",
+        Some("woff") => "font/woff",
+        Some("woff2") => "font/woff2",
+        Some("xml") => "application/xml",
+        Some("txt") => "text/plain; charset=utf-8",
+        _ => "application/octet-stream",
     }
 }
