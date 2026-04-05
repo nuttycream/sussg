@@ -9,7 +9,7 @@ use sussg::SectionThing;
 
 use crate::{config::load_config, errors::ErrDis, utils::*};
 
-pub fn build(path: &Path, is_local: bool, out: Option<&Path>) -> Result<(), ErrDis> {
+pub fn build(path: &Path, is_local: bool, out: Option<&Path>, drafts: bool) -> Result<(), ErrDis> {
     let mut config = load_config(path);
 
     if is_local {
@@ -91,6 +91,10 @@ pub fn build(path: &Path, is_local: bool, out: Option<&Path>) -> Result<(), ErrD
     //println!("content:{:?}", content);
 
     for thing in content {
+        if thing.frontmatter.draft.unwrap_or(false) && !drafts {
+            continue;
+        }
+
         // this is where we'll start to populate
         // templates and then write them out to html
 
