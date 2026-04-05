@@ -71,6 +71,11 @@ pub fn build(path: &Path, is_local: bool, out: Option<&Path>, drafts: bool) -> R
     let mut sections: HashMap<String, Vec<SectionThing>> = HashMap::new();
 
     for thing in content.iter() {
+        // prevent minijinja from reading drafts if they're not enabled
+        if thing.frontmatter.draft.unwrap_or(false) && !drafts {
+            continue;
+        }
+
         if let Some(ref section) = thing.section {
             let url = get_post_url(&site_url, &thing.path);
 
