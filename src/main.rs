@@ -23,6 +23,8 @@ OPTIONS:
   -p, --path PATH       specify site path [default: ./]
   -o, --out PATH        override the output path for the build 
   -l, --local           build site with local site_url aka root url: \"/\"
+  -d, --drafts          build site with draft contents
+                         - this is set to true on serve
   --port PORT           specify port [default: 3030]
 ";
 
@@ -33,6 +35,7 @@ enum Command {
         path: PathBuf,
         local: bool,
         out: Option<PathBuf>,
+        drafts: bool,
     },
     Serve {
         path: PathBuf,
@@ -63,7 +66,16 @@ fn parse_args() -> Result<Command, pico_args::Error> {
 
             let out = pargs.opt_value_from_str(["-o", "--out"])?;
 
-            Command::Build { path, local, out }
+            let drafts = pargs
+                .opt_value_from_str(["-d", "--drafts"])?
+                .unwrap_or(false);
+
+            Command::Build {
+                path,
+                local,
+                out,
+                drafts,
+            }
         }
         Some("serve") => {
             let path: PathBuf = pargs
@@ -90,7 +102,8 @@ fn parse_args() -> Result<Command, pico_args::Error> {
     let remaining = pargs.finish();
 
     if !remaining.is_empty() {
-        println!("unused arguments left: {:?}.", remaining);
+        println!("not a valid argument/s: {:?}.", remaining);
+        std::process::exit(1);
     }
 
     Ok(cmd)
@@ -107,8 +120,13 @@ fn main() {
 
     match cmd {
         Command::Init => cmd::init::init(),
-        Command::Build { path, local, out } => {
-            cmd::build::build(&path, local, out.as_deref()).unwrap();
+        Command::Build {
+            path,
+            local,
+            out,
+            drafts,
+        } => {
+            cmd::build::build(&path, local, out.as_deref(), drafts).unwrap();
         }
         Command::Serve { path, port, out } => {
             cmd::serve::serve(&path, port, out.as_deref()).unwrap();
