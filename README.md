@@ -19,7 +19,7 @@ which I'll reply with: good question, because well uhhh
 ## Features
 
 - Simple
-- Fast
+- Ultimate
 
 ## Installation
 
@@ -35,7 +35,7 @@ inputs = {
 outputs = {
   sussg,
   ...
-}: 
+}:
 ...
 ```
 
@@ -48,6 +48,9 @@ packages = [
 ```
 
 - `sussg` should now be available in your shell.
+
+> Note: you can use cargo as well
+> `cargo install --git https://github.com/nuttycream/sussg`
 
 ## Usage
 
