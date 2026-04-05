@@ -21,6 +21,7 @@ COMMANDS:
 OPTIONS:
   -h, --help            print this
   -p, --path PATH       specify site path [default: ./]
+  -o, --out PATH        override the output path for the build 
   -l, --local           build site with local site_url aka root url: \"/\"
   --port PORT           specify port [default: 3030]
 ";
@@ -28,8 +29,16 @@ OPTIONS:
 #[derive(Debug)]
 enum Command {
     Init,
-    Build { path: PathBuf, local: bool },
-    Serve { path: PathBuf, port: u32 },
+    Build {
+        path: PathBuf,
+        local: bool,
+        out: Option<PathBuf>,
+    },
+    Serve {
+        path: PathBuf,
+        port: u32,
+        out: Option<PathBuf>,
+    },
 }
 
 fn parse_args() -> Result<Command, pico_args::Error> {
@@ -44,7 +53,7 @@ fn parse_args() -> Result<Command, pico_args::Error> {
     let cmd = match subcommand.as_deref() {
         Some("init") => Command::Init,
         Some("build") => {
-            let path: PathBuf = pargs
+            let path = pargs
                 .opt_value_from_str(["-p", "--path"])?
                 .unwrap_or_else(|| PathBuf::from("./"));
 
@@ -52,14 +61,20 @@ fn parse_args() -> Result<Command, pico_args::Error> {
                 .opt_value_from_str(["-l", "--local"])?
                 .unwrap_or(false);
 
-            Command::Build { path, local }
+            let out = pargs.opt_value_from_str(["-o", "--out"])?;
+
+            Command::Build { path, local, out }
         }
         Some("serve") => {
             let path: PathBuf = pargs
                 .opt_value_from_str(["-p", "--path"])?
                 .unwrap_or_else(|| PathBuf::from("./"));
+
+            let out = pargs.opt_value_from_str(["-o", "--out"])?;
+
             let port: u32 = pargs.opt_value_from_str("--port")?.unwrap_or(3030);
-            Command::Serve { path, port }
+
+            Command::Serve { path, port, out }
         }
         Some(other) => {
             eprintln!("unknown command: {other}");
@@ -92,11 +107,11 @@ fn main() {
 
     match cmd {
         Command::Init => cmd::init::init(),
-        Command::Build { path, local } => {
-            cmd::build::build(&path, local).unwrap();
+        Command::Build { path, local, out } => {
+            cmd::build::build(&path, local, out.as_deref()).unwrap();
         }
-        Command::Serve { path, port } => {
-            cmd::serve::serve(&path, port).unwrap();
+        Command::Serve { path, port, out } => {
+            cmd::serve::serve(&path, port, out.as_deref()).unwrap();
         }
     }
 }
