@@ -14,10 +14,11 @@ const POLL_RATE_MS: Duration = Duration::from_millis(50);
 const PATHS_TO_WATCH: &[&str] = &["templates", "styles", "content", "static", "config.toml"];
 
 pub fn serve(content_path: &Path, port: u32, out: Option<&Path>) -> std::io::Result<()> {
-    let _ = crate::cmd::build::build(content_path, true, out);
+    let _ = crate::cmd::build::build(content_path, true, out, true);
 
     let public_dir = PathBuf::from("./public");
     let rx = watch_for_changes(content_path);
+
     let content_path = content_path.to_owned();
     let out = out.map(|p| p.to_owned());
 
@@ -33,7 +34,7 @@ pub fn serve(content_path: &Path, port: u32, out: Option<&Path>) -> std::io::Res
     thread::spawn(move || {
         for _ in rx {
             println!("change detected, rebuilding...");
-            let _ = crate::cmd::build::build(&content_path, true, out.as_deref());
+            let _ = crate::cmd::build::build(&content_path, true, out.as_deref(), true);
         }
     });
 
