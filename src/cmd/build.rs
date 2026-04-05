@@ -9,7 +9,7 @@ use sussg::SectionThing;
 
 use crate::{config::load_config, errors::ErrDis, utils::*};
 
-pub fn build(path: &Path, is_local: bool) -> Result<(), ErrDis> {
+pub fn build(path: &Path, is_local: bool, out: Option<&Path>) -> Result<(), ErrDis> {
     let mut config = load_config(path);
 
     if is_local {
@@ -18,7 +18,12 @@ pub fn build(path: &Path, is_local: bool) -> Result<(), ErrDis> {
 
     let main_path = path.to_path_buf();
 
-    let output_dir = config.general.output_dir;
+    let output_dir = if let Some(out) = out {
+        out.to_str().unwrap_or(&config.general.output_dir)
+    } else {
+        &config.general.output_dir
+    };
+
     let site_url = config.general.url;
 
     match fs::create_dir_all(&output_dir) {
