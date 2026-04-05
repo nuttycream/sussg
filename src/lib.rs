@@ -41,6 +41,7 @@ pub struct Frontmatter {
     pub description: Option<String>,
     pub author: Option<String>,
     pub date: Option<String>,
+    pub draft: Option<bool>,
 
     pub styles: Option<Vec<String>>,
     pub use_main: Option<bool>, // similar to use_base
