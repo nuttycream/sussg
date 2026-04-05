@@ -27,7 +27,7 @@
             src = ./.;
             buildInputs = [];
             nativeBuildInputs = [];
-            cargoHash = "sha256-xTFOY8PWm1WK12jXOKMd7Ow4q0TaVUe5bgAhy0VQmKY=";
+            cargoHash = "sha256-k3CEdsVcyb+6RljO7vEkcl/XJkGIExxX8LHwyUG5HUw=";
           };
 
           devShells.default = mkShell {
