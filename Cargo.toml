@@ -11,3 +11,7 @@ pulldown-cmark = { version = "0.13.0", features = ["html"] }
 serde = { version = "1.0.228", default-features = false, features = ["derive"] }
 toml = { version = "0.9.5", default-features = false, features = ["serde", "parse", "display"] }
 walkdir = "2.5.0"  
+
+[profile.dev]
+debug = 0
+opt-level = 0
