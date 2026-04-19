@@ -10,6 +10,28 @@ use std::{
 };
 use walkdir::WalkDir;
 
+const SSE_RELOAD_JS: &[u8] = br#"<script data-event-stream="/events">(() => {
+  const inputs = document.currentScript.dataset;
+  addEventListener("pageshow", () => {
+    const source = new EventSource(inputs.eventStream);
+    source.addEventListener("reload", () => {
+      source.close();
+      window.location.reload();
+    });
+    const onerror = () => {
+      source.removeEventListener("error", onerror);
+      source.addEventListener("init", () => {
+        source.close();
+        window.location.reload();
+      });
+    };
+    source.addEventListener("error", onerror);
+    addEventListener("pagehide", () => {
+      source.removeEventListener("error", onerror);
+      source.close();
+    });
+  });
+})();</script>"#;
 const POLL_RATE_MS: Duration = Duration::from_millis(50);
 const PATHS_TO_WATCH: &[&str] = &["templates", "styles", "content", "static", "config.toml"];
 
@@ -76,6 +98,13 @@ pub fn serve(content_path: &Path, port: u32, out: Option<&Path>) -> std::io::Res
         match fs::read(&file_path) {
             Ok(contents) => {
                 let mime = mime(&file_path);
+                let contents = if mime.starts_with("text/html") {
+                    let mut buf = contents;
+                    buf.extend_from_slice(SSE_RELOAD_JS);
+                    buf
+                } else {
+                    contents
+                };
                 let header = format!(
                     "HTTP/1.1 200 OK\r\nContent-Type: {}\r\nContent-Length: {}\r\n\r\n",
                     mime,
