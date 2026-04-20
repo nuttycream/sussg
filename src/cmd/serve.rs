@@ -2,9 +2,9 @@ use std::{
     collections::HashMap,
     fs,
     io::{BufRead, BufReader, Write},
-    net::TcpListener,
+    net::{TcpListener, TcpStream},
     path::{Path, PathBuf},
-    sync::mpsc,
+    sync::{Arc, Mutex},
     thread,
     time::{Duration, SystemTime},
 };
@@ -35,11 +35,30 @@ const SSE_RELOAD_JS: &[u8] = br#"<script data-event-stream="/events">(() => {
 const POLL_RATE_MS: Duration = Duration::from_millis(50);
 const PATHS_TO_WATCH: &[&str] = &["templates", "styles", "content", "static", "config.toml"];
 
+#[derive(Clone, Default)]
+struct Reloader {
+    clients: Arc<Mutex<Vec<TcpStream>>>,
+}
+
+impl Reloader {
+    fn register(&self, stream: TcpStream) {
+        self.clients.lock().unwrap().push(stream);
+    }
+
+    fn notify(&self) {
+        self.clients
+            .lock()
+            .unwrap()
+            .retain_mut(|s| s.write_all(b"event: reload\ndata:\n\n").is_ok());
+    }
+}
+
 pub fn serve(content_path: &Path, port: u32, out: Option<&Path>) -> std::io::Result<()> {
     let _ = crate::cmd::build::build(content_path, true, out, true);
 
     let public_dir = PathBuf::from("./public");
-    let rx = watch_for_changes(content_path);
+
+    let reloader = Reloader::default();
 
     let content_path = content_path.to_owned();
     let out = out.map(|p| p.to_owned());
@@ -53,110 +72,134 @@ pub fn serve(content_path: &Path, port: u32, out: Option<&Path>) -> std::io::Res
     let listener = TcpListener::bind(format!("127.0.0.1:{}", port))?;
     println!("listening on http://127.0.0.1:{}", port);
 
-    thread::spawn(move || {
-        for _ in rx {
-            println!("change detected, rebuilding...");
-            let _ = crate::cmd::build::build(&content_path, true, out.as_deref(), true);
-        }
-    });
+    watch_for_changes(
+        content_path.to_owned(),
+        out.map(|p| p.to_owned()),
+        reloader.to_owned(),
+    );
 
     for stream in listener.incoming() {
-        let mut stream = stream?;
-        let buf_reader = BufReader::new(&stream);
+        let stream = stream?;
+        let public_dir = public_dir.to_owned();
+        let reloader = reloader.to_owned();
 
-        // we only care about the first request line
-        let req_line = match buf_reader.lines().next() {
-            Some(Ok(line)) => line,
-            _ => continue,
-        };
+        thread::spawn(move || {
+            let _ = handle_connection(stream, &public_dir, &reloader);
+        });
+    }
 
-        //println!("{req_line}");
+    Ok(())
+}
 
-        let req_path = req_line.split_whitespace().nth(1).unwrap_or("/");
+fn watch_for_changes(content_path: PathBuf, out: Option<PathBuf>, reloader: Reloader) {
+    thread::spawn(move || {
+        let mut previous = check_metadata(&content_path).unwrap();
+        loop {
+            thread::sleep(POLL_RATE_MS);
 
-        let mut file_path = public_dir.join(req_path.trim_start_matches('/'));
+            let Ok(curr) = check_metadata(&content_path) else {
+                continue;
+            };
 
-        // given dir:
-        //  ➜ tree public
-        // public
-        // ├── favicon.ico
-        // ├── fonts
-        // │   └── IBMPlexSans.ttf
-        // ├── fonts.css
-        // ├── index.html
-        // ├── main.css
-        // ├── posts
-        // │   ├── install
-        // │   │   └── index.html
-        // │   └── usage
-        // │       └── index.html
-        // └── sussg.svg
-        if file_path.is_dir() {
-            file_path.push("index.html");
+            if curr != previous {
+                println!("change detected, rebuilding...");
+                let _ = crate::cmd::build::build(&content_path, true, out.as_deref(), true);
+                reloader.notify();
+                previous = curr;
+            }
         }
+    });
+}
 
-        match fs::read(&file_path) {
-            Ok(contents) => {
-                let mime = mime(&file_path);
-                let contents = if mime.starts_with("text/html") {
-                    let mut buf = contents;
-                    buf.extend_from_slice(SSE_RELOAD_JS);
-                    buf
-                } else {
-                    contents
-                };
-                let header = format!(
-                    "HTTP/1.1 200 OK\r\nContent-Type: {}\r\nContent-Length: {}\r\n\r\n",
-                    mime,
-                    contents.len(),
-                );
+fn handle_connection(
+    mut stream: TcpStream,
+    public_dir: &Path,
+    reloader: &Reloader,
+) -> std::io::Result<()> {
+    let req_line = {
+        let mut buf_reader = BufReader::new(&stream);
+        let mut line = String::new();
+        if buf_reader.read_line(&mut line)? == 0 {
+            return Ok(());
+        }
+        line
+    };
 
-                stream.write_all(header.as_bytes())?;
-                stream.write_all(&contents)?;
-            }
-            Err(_) => {
-                let body = "404 Not Found";
-                let response = format!(
-                    "HTTP/1.1 404 Not Found\r\nContent-Length: {}\r\n\r\n{}",
-                    body.len(),
-                    body
-                );
+    let req_path = req_line.split_whitespace().nth(1).unwrap_or("/");
 
-                stream.write_all(response.as_bytes())?;
-            }
+    if req_path == "/events" {
+        return handle_events(stream, reloader);
+    }
+
+    let mut file_path = public_dir.join(req_path.trim_start_matches('/'));
+
+    // given dir:
+    //  ➜ tree public
+    // public
+    // ├── favicon.ico
+    // ├── fonts
+    // │   └── IBMPlexSans.ttf
+    // ├── fonts.css
+    // ├── index.html
+    // ├── main.css
+    // ├── posts
+    // │   ├── install
+    // │   │   └── index.html
+    // │   └── usage
+    // │       └── index.html
+    // └── sussg.svg
+    if file_path.is_dir() {
+        file_path.push("index.html");
+    }
+
+    match fs::read(&file_path) {
+        Ok(contents) => {
+            let mime = mime(&file_path);
+            let contents = if mime.starts_with("text/html") {
+                let mut buf = contents;
+                buf.extend_from_slice(SSE_RELOAD_JS);
+                buf
+            } else {
+                contents
+            };
+            let header = format!(
+                "HTTP/1.1 200 OK\r\nContent-Type: {}\r\nContent-Length: {}\r\n\r\n",
+                mime,
+                contents.len(),
+            );
+
+            stream.write_all(header.as_bytes())?;
+            stream.write_all(&contents)?;
+        }
+        Err(_) => {
+            let body = "404 Not Found";
+            let response = format!(
+                "HTTP/1.1 404 Not Found\r\nContent-Length: {}\r\n\r\n{}",
+                body.len(),
+                body
+            );
+
+            stream.write_all(response.as_bytes())?;
         }
     }
 
     Ok(())
 }
 
-fn watch_for_changes(content_path: &Path) -> mpsc::Receiver<bool> {
-    let (tx, rx) = mpsc::channel();
-    let content_path = content_path.to_owned();
+fn handle_events(mut stream: TcpStream, reloader: &Reloader) -> std::io::Result<()> {
+    // https://developer.mozilla.org/en-US/docs/Web/API/Server-sent_events/Using_server-sent_events#sending_events_from_the_server
+    stream.write_all(
+        b"HTTP/1.1 200 OK\r\n\
+          Content-Type: text/event-stream\r\n\
+          Cache-Control: no-cache\r\n\
+          \r\n\
+          event: init\ndata:\nretry: 1000\n\n",
+    )?;
 
-    thread::spawn(move || {
-        let mut previous = check_metadata(&content_path).unwrap();
+    stream.flush()?;
 
-        loop {
-            thread::sleep(POLL_RATE_MS);
-            let curr = check_metadata(&content_path).unwrap();
-            for (path, modified) in &curr {
-                match previous.get(path) {
-                    None => {
-                        tx.send(true).ok();
-                    }
-                    Some(old) if *old != *modified => {
-                        tx.send(true).ok();
-                    }
-                    _ => {}
-                }
-            }
-
-            previous = curr;
-        }
-    });
-
-    rx
+    reloader.register(stream);
+    Ok(())
 }
 
 fn check_metadata(path: &Path) -> std::io::Result<HashMap<PathBuf, SystemTime>> {
