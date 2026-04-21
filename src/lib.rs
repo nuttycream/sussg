@@ -45,8 +45,6 @@ pub struct Frontmatter {
 
     pub styles: Option<Vec<String>>,
     pub use_main: Option<bool>, // similar to use_base
-
-    pub github: Option<String>,
 }
 
 // Can be anything, a post,
