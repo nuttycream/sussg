@@ -1,4 +1,7 @@
-use crate::{convert::convert, errors::ErrDis};
+use crate::{
+    convert::{Block, convert},
+    errors::ErrDis,
+};
 use std::{
     ffi::OsStr,
     fs,
@@ -300,7 +303,12 @@ fn read_markdown(path: &Path) -> Result<(Frontmatter, String, Vec<Heading>), Err
         Err(e) => return Err(ErrDis::BadMarkdownString(e.to_string())),
     };
 
-    let (frontmatter_string, html_output, headings) = convert(&md_string);
+    let (frontmatter_string, html_output, headings, blocks) = convert(&md_string);
+
+    let blockies: Vec<Block> = blocks.iter().map(|b| toml::from_str(b).unwrap()).collect();
+
+    println!("{:#?}", blockies);
+
     let frontmatter: Frontmatter = match toml::from_str(&frontmatter_string) {
         Ok(fm) => fm,
         Err(e) => return Err(ErrDis::BadFrontmatter(frontmatter_string, e.to_string())),

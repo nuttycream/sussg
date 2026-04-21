@@ -21,11 +21,15 @@ Well then why not just build out your entire site in raw html? You might ask,
 which I'll reply with: good question, because well uhhh
 
 ```sussg
-test 1
+type="metadata"
+name="yep"
+values="nope"
 ```
 
 ```sussg
-test 2
+type="plugin"
+name="yep"
+values=["yep"]
 ```
 
 ## Features

@@ -5,19 +5,22 @@ use sussg::Heading;
 use crate::{post_process::post_process, utils};
 
 #[derive(Deserialize, Debug)]
-enum BlockType {
+#[serde(rename_all = "lowercase")]
+pub enum BlockType {
     Metadata,
     Plugin,
 }
 
-#[derive(Deserialize)]
-struct Block {
+#[derive(Debug, Deserialize)]
+pub struct Block {
     #[serde(rename = "type")]
-    kind: BlockType,
-    name: String,
+    pub kind: BlockType,
+    pub name: String,
+    #[serde(flatten)]
+    pub data: toml::Table,
 }
 
-pub fn convert(md_string: &str) -> (String, String, Vec<Heading>) {
+pub fn convert(md_string: &str) -> (String, String, Vec<Heading>, Vec<String>) {
     let mut options = Options::empty();
     options.insert(Options::ENABLE_HEADING_ATTRIBUTES);
     options.insert(Options::ENABLE_GFM);
@@ -30,6 +33,7 @@ pub fn convert(md_string: &str) -> (String, String, Vec<Heading>) {
     let mut inside_sussg = false;
     let mut sussg_text = String::new();
     let mut blocks: Vec<String> = Vec::new();
+
     let mut frontmatter = String::new();
 
     let mut headings = Vec::new();
@@ -114,7 +118,7 @@ pub fn convert(md_string: &str) -> (String, String, Vec<Heading>) {
     //println!("{html_output}");
     //println!("headings: {:#?}", headings);
 
-    (frontmatter, html_output, headings)
+    (frontmatter, html_output, headings, blocks)
 }
 
 #[cfg(test)]
@@ -133,7 +137,7 @@ author: test author
 ### H3 test
 "#;
 
-        let (frontmatter, html, _headings) = convert(markdown);
+        let (frontmatter, html, _headings, _) = convert(markdown);
 
         assert!(frontmatter.contains("title: test title"));
         assert!(html.contains("<h1"));
