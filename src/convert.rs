@@ -1,4 +1,4 @@
-use pulldown_cmark::{Event, MetadataBlockKind, Options, Tag as TagStart, TagEnd};
+use pulldown_cmark::{CodeBlockKind, Event, MetadataBlockKind, Options, Tag as TagStart, TagEnd};
 use sussg::Heading;
 
 use crate::{post_process::post_process, utils};
@@ -13,6 +13,8 @@ pub fn convert(md_string: &str) -> (String, String, Vec<Heading>) {
     options.insert(Options::ENABLE_PLUSES_DELIMITED_METADATA_BLOCKS);
 
     let mut inside_yaml = false;
+    let mut inside_sussg = false;
+    let mut sussg_text = String::new();
     let mut frontmatter = String::new();
 
     let mut headings = Vec::new();
@@ -27,6 +29,14 @@ pub fn convert(md_string: &str) -> (String, String, Vec<Heading>) {
             }
             Event::End(TagEnd::MetadataBlock(MetadataBlockKind::YamlStyle)) => {
                 inside_yaml = false;
+            }
+            Event::Start(TagStart::CodeBlock(CodeBlockKind::Fenced(l)))
+                if l.as_ref() == "sussg" =>
+            {
+                inside_sussg = true;
+            }
+            Event::End(TagEnd::CodeBlock) if inside_sussg => {
+                inside_sussg = false;
             }
             Event::Start(TagStart::Heading { level, id, .. }) => {
                 curr_heading_str.clear();
@@ -63,6 +73,9 @@ pub fn convert(md_string: &str) -> (String, String, Vec<Heading>) {
                 }
                 if curr_heading_level.is_some() {
                     curr_heading_str.push_str(text);
+                }
+                if inside_sussg {
+                    println!("{text}");
                 }
             }
             _ => {}
