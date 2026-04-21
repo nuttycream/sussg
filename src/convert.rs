@@ -1,7 +1,21 @@
 use pulldown_cmark::{CodeBlockKind, Event, MetadataBlockKind, Options, Tag as TagStart, TagEnd};
+use serde::Deserialize;
 use sussg::Heading;
 
 use crate::{post_process::post_process, utils};
+
+#[derive(Deserialize, Debug)]
+enum BlockType {
+    Metadata,
+    Plugin,
+}
+
+#[derive(Deserialize)]
+struct Block {
+    #[serde(rename = "type")]
+    kind: BlockType,
+    name: String,
+}
 
 pub fn convert(md_string: &str) -> (String, String, Vec<Heading>) {
     let mut options = Options::empty();
@@ -15,6 +29,7 @@ pub fn convert(md_string: &str) -> (String, String, Vec<Heading>) {
     let mut inside_yaml = false;
     let mut inside_sussg = false;
     let mut sussg_text = String::new();
+    let mut blocks: Vec<String> = Vec::new();
     let mut frontmatter = String::new();
 
     let mut headings = Vec::new();
@@ -37,6 +52,9 @@ pub fn convert(md_string: &str) -> (String, String, Vec<Heading>) {
             }
             Event::End(TagEnd::CodeBlock) if inside_sussg => {
                 inside_sussg = false;
+
+                blocks.push(sussg_text.to_owned());
+                sussg_text.clear();
             }
             Event::Start(TagStart::Heading { level, id, .. }) => {
                 curr_heading_str.clear();
@@ -74,8 +92,9 @@ pub fn convert(md_string: &str) -> (String, String, Vec<Heading>) {
                 if curr_heading_level.is_some() {
                     curr_heading_str.push_str(text);
                 }
+
                 if inside_sussg {
-                    println!("{text}");
+                    sussg_text.push_str(&text);
                 }
             }
             _ => {}
@@ -87,6 +106,8 @@ pub fn convert(md_string: &str) -> (String, String, Vec<Heading>) {
 
     let mut html_output = String::new();
     pulldown_cmark::html::push_html(&mut html_output, parser);
+
+    println!("{:#?}", blocks);
 
     html_output = post_process(&html_output, &headings);
 
