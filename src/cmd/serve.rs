@@ -205,16 +205,20 @@ fn handle_events(mut stream: TcpStream, reloader: &Reloader) -> std::io::Result<
 fn check_metadata(path: &Path) -> std::io::Result<HashMap<PathBuf, SystemTime>> {
     let mut map = HashMap::new();
 
-    for entry in WalkDir::new(path)
-        .follow_links(true)
-        .follow_root_links(true)
-    {
-        let path = entry?.path().to_owned();
-        let modified = fs::metadata(&path)?.modified()?;
+    for watch in PATHS_TO_WATCH {
+        let root = path.join(watch);
 
-        map.insert(path, modified);
+        for entry in WalkDir::new(&root)
+            .follow_links(true)
+            .follow_root_links(true)
+        {
+            let path = entry?.path().to_owned();
+            let modified = fs::metadata(&path)?.modified()?;
 
-        //println!("{:#?}", metadata.modified()?);
+            map.insert(path, modified);
+
+            //println!("{:#?}", metadata.modified()?);
+        }
     }
 
     Ok(map)
