@@ -62,6 +62,7 @@ pub struct TheThing {
     /// minijinja context
     pub section: Option<String>,
     pub headings: Vec<Heading>,
+    pub blocks: Vec<Block>,
 }
 
 /// Heading for toc info
@@ -70,4 +71,20 @@ pub struct Heading {
     pub level: u8,
     pub text: String,
     pub id: String,
+}
+
+#[derive(Deserialize, Serialize, Debug)]
+#[serde(rename_all = "lowercase")]
+pub enum BlockType {
+    Metadata,
+    Plugin,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct Block {
+    #[serde(rename = "type")]
+    pub kind: BlockType,
+    pub name: String,
+    #[serde(flatten)]
+    pub data: toml::Table,
 }

@@ -1,14 +1,11 @@
-use crate::{
-    convert::{Block, convert},
-    errors::ErrDis,
-};
+use crate::{convert::convert, errors::ErrDis};
 use std::{
     ffi::OsStr,
     fs,
     path::{Path, PathBuf},
 };
 
-use sussg::{Frontmatter, Heading, Style, Template, TheThing};
+use sussg::{Block, Frontmatter, Heading, Style, Template, TheThing};
 use walkdir::WalkDir;
 
 /// neat helper func specific for posts
@@ -223,8 +220,8 @@ fn read_page(
     main_styles: &Vec<String>,
     base_template: &str,
 ) -> Result<TheThing, ErrDis> {
-    let (frontmatter, html_output, headings) = match read_markdown(page_path) {
-        Ok((fm, c, h)) => (fm, c, h),
+    let (frontmatter, html_output, headings, blocks) = match read_markdown(page_path) {
+        Ok((fm, c, h, b)) => (fm, c, h, b),
         Err(e) => return Err(ErrDis::BadMarkdown(e.to_string())),
     };
 
@@ -294,10 +291,11 @@ fn read_page(
         content: html_output,
         section,
         headings,
+        blocks,
     })
 }
 
-fn read_markdown(path: &Path) -> Result<(Frontmatter, String, Vec<Heading>), ErrDis> {
+fn read_markdown(path: &Path) -> Result<(Frontmatter, String, Vec<Heading>, Vec<Block>), ErrDis> {
     let md_string = match fs::read_to_string(path) {
         Ok(md) => md,
         Err(e) => return Err(ErrDis::BadMarkdownString(e.to_string())),
@@ -307,14 +305,14 @@ fn read_markdown(path: &Path) -> Result<(Frontmatter, String, Vec<Heading>), Err
 
     let blockies: Vec<Block> = blocks.iter().map(|b| toml::from_str(b).unwrap()).collect();
 
-    println!("{:#?}", blockies);
+    //println!("{:#?}", blockies);
 
     let frontmatter: Frontmatter = match toml::from_str(&frontmatter_string) {
         Ok(fm) => fm,
         Err(e) => return Err(ErrDis::BadFrontmatter(frontmatter_string, e.to_string())),
     };
 
-    Ok((frontmatter, html_output, headings))
+    Ok((frontmatter, html_output, headings, blockies))
 }
 
 /// find the :// then the next / after the main

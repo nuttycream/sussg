@@ -1,24 +1,7 @@
 use pulldown_cmark::{CodeBlockKind, Event, MetadataBlockKind, Options, Tag as TagStart, TagEnd};
-use serde::Deserialize;
 use sussg::Heading;
 
 use crate::{post_process::post_process, utils};
-
-#[derive(Deserialize, Debug)]
-#[serde(rename_all = "lowercase")]
-pub enum BlockType {
-    Metadata,
-    Plugin,
-}
-
-#[derive(Debug, Deserialize)]
-pub struct Block {
-    #[serde(rename = "type")]
-    pub kind: BlockType,
-    pub name: String,
-    #[serde(flatten)]
-    pub data: toml::Table,
-}
 
 pub fn convert(md_string: &str) -> (String, String, Vec<Heading>, Vec<String>) {
     let mut options = Options::empty();
