@@ -133,7 +133,8 @@ pub fn build(path: &Path, is_local: bool, out: Option<&Path>, drafts: bool) -> R
             headings => thing.headings,
             sections,
             most_recent,
-            site_url
+            site_url,
+            blocks => thing.blocks
         }) {
             Ok(r) => r,
             Err(e) => return Err(ErrDis::BadRender(e.to_string())),
