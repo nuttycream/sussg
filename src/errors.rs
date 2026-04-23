@@ -13,6 +13,7 @@ pub enum ErrDis {
     BadMarkdownString(String),
     BadFrontmatter(String, String),
     BadRender(String),
+    BadPlugin(String),
 }
 
 impl Error for ErrDis {}
@@ -48,6 +49,7 @@ impl fmt::Display for ErrDis {
                 write!(f, "Failed to parse frontmatter: {fm}\nBecause:{e}")
             }
             ErrDis::BadRender(e) => write!(f, "Failed to render page: {e}"),
+            ErrDis::BadPlugin(e) => write!(f, "Failed to read plugin: {e}"),
         }
     }
 }

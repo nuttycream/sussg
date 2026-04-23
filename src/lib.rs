@@ -14,6 +14,12 @@ pub struct Template {
     pub template: String,
 }
 
+#[derive(Default, Debug, Clone)]
+pub struct Plugin {
+    pub name: String,
+    pub content: String,
+}
+
 // from /content/posts
 // this should all be gathered
 // from the frontmatter
