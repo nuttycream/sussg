@@ -33,7 +33,14 @@ const SSE_RELOAD_JS: &[u8] = br#"<script data-event-stream="/events">(() => {
   });
 })();</script>"#;
 const POLL_RATE_MS: Duration = Duration::from_millis(50);
-const PATHS_TO_WATCH: &[&str] = &["templates", "styles", "content", "static", "config.toml"];
+const PATHS_TO_WATCH: &[&str] = &[
+    "templates",
+    "styles",
+    "content",
+    "static",
+    "plugins",
+    "config.toml",
+];
 
 #[derive(Clone, Default)]
 struct Reloader {
