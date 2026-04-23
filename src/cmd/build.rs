@@ -46,6 +46,11 @@ pub fn build(path: &Path, is_local: bool, out: Option<&Path>, drafts: bool) -> R
         Err(e) => return Err(ErrDis::BadTemplates(e.to_string())),
     };
 
+    let plugins = match read_plugins(&main_path.join("plugins")) {
+        Ok(p) => p,
+        Err(e) => return Err(ErrDis::BadPlugin(e.to_string())),
+    };
+
     let mut env = Environment::new();
     minijinja_contrib::add_to_environment(&mut env);
 
