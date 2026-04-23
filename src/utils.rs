@@ -1,12 +1,12 @@
-use crate::{convert::convert, errors::ErrDis};
 use std::{
     ffi::OsStr,
     fs,
     path::{Path, PathBuf},
 };
-
-use sussg::{Block, Frontmatter, Heading, Style, Template, TheThing};
 use walkdir::WalkDir;
+
+use crate::{convert::convert, errors::ErrDis};
+use sussg::{Block, Frontmatter, Heading, Plugin, Style, Template, TheThing};
 
 /// neat helper func specific for posts
 /// we can reuse get_out_path() but i gotta
@@ -177,6 +177,35 @@ pub fn read_templates(template_path: &Path) -> Result<Vec<Template>, ErrDis> {
     }
 
     Ok(mustaches)
+}
+
+pub fn read_plugins(plugin_path: &Path) -> Result<Vec<Plugin>, ErrDis> {
+    let mut plugins = Vec::new();
+
+    for plugin_file in WalkDir::new(plugin_path).into_iter().filter_map(|e| e.ok()) {
+        let yea = plugin_file.path().extension() == Some(OsStr::new("html"));
+
+        if yea {
+            println!("processing plugin:{}", plugin_file.path().display());
+            let name = plugin_file
+                .path()
+                .file_name()
+                .and_then(OsStr::to_str)
+                .filter(|name| name.ends_with(".html"))
+                .map(|name| name.strip_suffix(".html").unwrap_or(name))
+                .unwrap_or("")
+                .to_string();
+
+            let content = match fs::read_to_string(plugin_file.path()) {
+                Ok(p) => p,
+                Err(e) => return Err(ErrDis::BadPlugin(e.to_string())),
+            };
+
+            plugins.push(Plugin { name, content });
+        }
+    }
+
+    Ok(plugins)
 }
 
 /// simplified version of the original slug::slugify
