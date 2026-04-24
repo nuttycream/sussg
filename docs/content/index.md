@@ -28,8 +28,7 @@ values="nope"
 
 ```sussg
 type="plugin"
-name="yep"
-values=["yep"]
+name="3d-viewer"
 ```
 
 ## Features
