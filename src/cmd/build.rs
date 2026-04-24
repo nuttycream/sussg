@@ -65,6 +65,7 @@ pub fn build(path: &Path, is_local: bool, out: Option<&Path>, drafts: bool) -> R
         &main_path.join("content"),
         &styles,
         &templates,
+        &plugins,
         &config.style.main,
         &config.template.base,
     ) {
@@ -139,7 +140,6 @@ pub fn build(path: &Path, is_local: bool, out: Option<&Path>, drafts: bool) -> R
             sections,
             most_recent,
             site_url,
-            blocks => thing.blocks
         }) {
             Ok(r) => r,
             Err(e) => return Err(ErrDis::BadRender(e.to_string())),

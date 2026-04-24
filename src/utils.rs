@@ -76,7 +76,8 @@ pub fn read_static(static_path: &Path) -> Result<(), ErrDis> {
 pub fn read_content(
     content_root_path: &Path,
     styles: &Vec<Style>,
-    mustaches: &Vec<Template>,
+    templates: &Vec<Template>,
+    plugins: &Vec<Plugin>,
     main_style: &Vec<String>,
     base_template: &str,
 ) -> Result<Vec<TheThing>, ErrDis> {
@@ -90,7 +91,8 @@ pub fn read_content(
                 content.path(),
                 content_root_path,
                 styles,
-                mustaches,
+                templates,
+                plugins,
                 main_style,
                 base_template,
             ) {
@@ -246,6 +248,7 @@ fn read_page(
     content_root_path: &Path,
     avail_styles: &Vec<Style>,
     avail_templs: &Vec<Template>,
+    avail_plugins: &Vec<Plugin>,
     main_styles: &Vec<String>,
     base_template: &str,
 ) -> Result<TheThing, ErrDis> {
@@ -320,7 +323,7 @@ fn read_page(
         content: html_output,
         section,
         headings,
-        blocks,
+        plugins: avail_plugins.to_owned(),
     })
 }
 

@@ -1,4 +1,6 @@
-use pulldown_cmark::{CodeBlockKind, Event, MetadataBlockKind, Options, Tag as TagStart, TagEnd};
+use pulldown_cmark::{
+    CodeBlockKind, CowStr, Event, MetadataBlockKind, Options, Tag as TagStart, TagEnd,
+};
 use sussg::Heading;
 
 use crate::{post_process::post_process, utils};
@@ -24,24 +26,32 @@ pub fn convert(md_string: &str) -> (String, String, Vec<Heading>, Vec<String>) {
     let mut curr_heading_str = String::new();
     let mut curr_heading_id: Option<String> = None;
 
-    let parser = pulldown_cmark::Parser::new_ext(md_string, options).map(|event| {
+    let parser = pulldown_cmark::Parser::new_ext(md_string, options).filter_map(|event| {
         match &event {
             Event::Start(TagStart::MetadataBlock(MetadataBlockKind::YamlStyle)) => {
                 inside_yaml = true;
+                Some(event)
             }
             Event::End(TagEnd::MetadataBlock(MetadataBlockKind::YamlStyle)) => {
                 inside_yaml = false;
+                Some(event)
             }
             Event::Start(TagStart::CodeBlock(CodeBlockKind::Fenced(l)))
                 if l.as_ref() == "sussg" =>
             {
                 inside_sussg = true;
+                None
             }
             Event::End(TagEnd::CodeBlock) if inside_sussg => {
                 inside_sussg = false;
 
+                let idx = blocks.len();
                 blocks.push(sussg_text.to_owned());
                 sussg_text.clear();
+
+                Some(Event::Html(CowStr::Boxed(
+                    format!("<!--baka:{}-->", idx).into_boxed_str(),
+                )))
             }
             Event::Start(TagStart::Heading { level, id, .. }) => {
                 curr_heading_str.clear();
@@ -52,6 +62,7 @@ pub fn convert(md_string: &str) -> (String, String, Vec<Heading>, Vec<String>) {
                     curr_heading_id = None;
                 }
                 //println!("heading level: {}", curr_heading_level);
+                Some(event)
             }
             Event::End(TagEnd::Heading(_)) => {
                 //println!("heading: {}", curr_heading_str);
@@ -70,6 +81,7 @@ pub fn convert(md_string: &str) -> (String, String, Vec<Heading>, Vec<String>) {
                     curr_heading_level = None;
                     curr_heading_id = None;
                 }
+                Some(event)
             }
             Event::Text(text) => {
                 if inside_yaml {
@@ -82,11 +94,13 @@ pub fn convert(md_string: &str) -> (String, String, Vec<Heading>, Vec<String>) {
 
                 if inside_sussg {
                     sussg_text.push_str(&text);
+                    None
+                } else {
+                    Some(event)
                 }
             }
-            _ => {}
+            _ => Some(event),
         }
-        event
     });
 
     //println!("frontmatter:{:?}", frontmatter);

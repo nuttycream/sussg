@@ -68,7 +68,7 @@ pub struct TheThing {
     /// minijinja context
     pub section: Option<String>,
     pub headings: Vec<Heading>,
-    pub blocks: Vec<Block>,
+    pub plugins: Vec<Plugin>,
 }
 
 /// Heading for toc info
