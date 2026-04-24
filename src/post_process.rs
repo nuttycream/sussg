@@ -1,4 +1,4 @@
-use sussg::Heading;
+use sussg::{Heading, Plugin};
 
 pub fn post_process(html: &str, headings: &[Heading]) -> String {
     // ideally we can make some of these configurable
@@ -27,4 +27,13 @@ fn add_heading_ids(html: &str, headings: &[Heading]) -> String {
     }
 
     to_add
+}
+
+fn replace_plugin_thing(html: &str, plugins: &[Plugin]) -> String {
+    let html = html.to_owned();
+    for (idx, plugin) in plugins.iter().enumerate() {
+        let emitter = format!("<!--baka:{}-->", idx);
+    }
+
+    html
 }
