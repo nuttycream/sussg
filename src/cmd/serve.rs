@@ -60,8 +60,13 @@ impl Reloader {
     }
 }
 
-pub fn serve(content_path: &Path, port: u32, out: Option<&Path>) -> std::io::Result<()> {
-    let _ = crate::cmd::build::build(content_path, true, out, true);
+pub fn serve(
+    content_path: &Path,
+    port: u32,
+    out: Option<&Path>,
+    drafts: bool,
+) -> std::io::Result<()> {
+    let _ = crate::cmd::build::build(content_path, true, out, drafts);
 
     let public_dir = PathBuf::from("./public");
 
@@ -82,6 +87,7 @@ pub fn serve(content_path: &Path, port: u32, out: Option<&Path>) -> std::io::Res
     watch_for_changes(
         content_path.to_owned(),
         out.map(|p| p.to_owned()),
+        drafts,
         reloader.to_owned(),
     );
 
@@ -98,7 +104,12 @@ pub fn serve(content_path: &Path, port: u32, out: Option<&Path>) -> std::io::Res
     Ok(())
 }
 
-fn watch_for_changes(content_path: PathBuf, out: Option<PathBuf>, reloader: Reloader) {
+fn watch_for_changes(
+    content_path: PathBuf,
+    out: Option<PathBuf>,
+    drafts: bool,
+    reloader: Reloader,
+) {
     thread::spawn(move || {
         let mut previous = check_metadata(&content_path).unwrap();
         loop {
@@ -110,7 +121,7 @@ fn watch_for_changes(content_path: PathBuf, out: Option<PathBuf>, reloader: Relo
 
             if curr != previous {
                 println!("change detected, rebuilding...");
-                let _ = crate::cmd::build::build(&content_path, true, out.as_deref(), true);
+                let _ = crate::cmd::build::build(&content_path, true, out.as_deref(), drafts);
                 reloader.notify();
                 previous = curr;
             }
