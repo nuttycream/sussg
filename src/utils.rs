@@ -5,7 +5,7 @@ use std::{
 };
 use walkdir::WalkDir;
 
-use crate::{convert::convert, errors::ErrDis};
+use crate::errors::ErrDis;
 use sussg::{Block, Frontmatter, Heading, Plugin, Style, Template, TheThing};
 
 /// neat helper func specific for posts
@@ -210,39 +210,6 @@ pub fn read_plugins(plugin_path: &Path) -> Result<Vec<Plugin>, ErrDis> {
     Ok(plugins)
 }
 
-/// simplified version of the original slug::slugify
-/// in the slug-rs crate
-pub fn slugify(s: &str) -> String {
-    let mut slug = String::with_capacity(s.len());
-
-    // true to avoid leading -
-    let mut prev_is_dash = true;
-
-    for c in s.chars() {
-        match c {
-            'a'..='z' | '0'..='9' => {
-                prev_is_dash = false;
-                slug.push(c);
-            }
-            'A'..='Z' => {
-                prev_is_dash = false;
-                slug.push(c.to_ascii_lowercase());
-            }
-            _ => {
-                if !prev_is_dash {
-                    slug.push('-');
-                    prev_is_dash = true;
-                }
-            }
-        }
-    }
-
-    if slug.ends_with('-') {
-        slug.pop();
-    }
-    slug
-}
-
 fn read_page(
     page_path: &Path,
     content_root_path: &Path,
@@ -252,8 +219,8 @@ fn read_page(
     main_styles: &Vec<String>,
     base_template: &str,
 ) -> Result<TheThing, ErrDis> {
-    let (frontmatter, html_output, headings, blocks) = match read_markdown(page_path) {
-        Ok((fm, c, h, b)) => (fm, c, h, b),
+    let (frontmatter, html_output, headings) = match read_markdown(page_path, avail_plugins) {
+        Ok((fm, c, h)) => (fm, c, h),
         Err(e) => return Err(ErrDis::BadMarkdown(e.to_string())),
     };
 
@@ -327,24 +294,21 @@ fn read_page(
     })
 }
 
-fn read_markdown(path: &Path) -> Result<(Frontmatter, String, Vec<Heading>, Vec<Block>), ErrDis> {
+fn read_markdown(
+    path: &Path,
+    avail_plugins: &Vec<Plugin>,
+) -> Result<(Frontmatter, String, Vec<Heading>), ErrDis> {
     let md_string = match fs::read_to_string(path) {
         Ok(md) => md,
         Err(e) => return Err(ErrDis::BadMarkdownString(e.to_string())),
     };
 
-    let (frontmatter_string, html_output, headings, blocks) = convert(&md_string);
+    let (frontmatter, html_output, headings, plugin_args) = crate::convert::convert(&md_string);
 
-    let blockies: Vec<Block> = blocks.iter().map(|b| toml::from_str(b).unwrap()).collect();
+    let processed =
+        crate::post_process::post_process(&html_output, &headings, avail_plugins, &plugin_args);
 
-    //println!("{:#?}", blockies);
-
-    let frontmatter: Frontmatter = match toml::from_str(&frontmatter_string) {
-        Ok(fm) => fm,
-        Err(e) => return Err(ErrDis::BadFrontmatter(frontmatter_string, e.to_string())),
-    };
-
-    Ok((frontmatter, html_output, headings, blockies))
+    Ok((frontmatter, processed, headings))
 }
 
 /// find the :// then the next / after the main
