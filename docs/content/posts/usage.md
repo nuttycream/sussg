@@ -1,7 +1,7 @@
----
-title="Usage"
-description="usage"
----
+```sussg
+type = "frontmatter"
+title = "Usage"
+```
 
 ## Usage
 

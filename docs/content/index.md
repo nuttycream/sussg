@@ -1,7 +1,3 @@
----
-title="sussg"
----
-
 <img src="https://raw.githubusercontent.com/nuttycream/sussg/main/docs/static/sussg.svg?sanitize=true" alt="sussy baka" width="200" align="right">
 
 # sussg
@@ -21,9 +17,8 @@ Well then why not just build out your entire site in raw html? You might ask,
 which I'll reply with: good question, because well uhhh
 
 ```sussg
-type="metadata"
-name="yep"
-values="nope"
+type="frontmatter"
+title="yep"
 ```
 
 ```sussg

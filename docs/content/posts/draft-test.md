@@ -1,7 +1,7 @@
----
-title="you should not be able to see this"
-description="draft"
+```sussg
+type = "frontmatter"
+title = "you should not be seeing this"
 draft = true
----
+```
 
 draft test
