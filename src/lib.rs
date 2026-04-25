@@ -14,10 +14,19 @@ pub struct Template {
     pub template: String,
 }
 
-#[derive(Default, Debug, Clone)]
+#[derive(Default, Debug, Deserialize, Serialize, Clone)]
 pub struct Plugin {
     pub name: String,
     pub content: String,
+}
+
+/// called within the markdown
+/// see Plugin for the raw html content
+#[derive(Debug, Deserialize, Serialize, Clone)]
+pub struct PluginArgs {
+    pub name: String,
+    #[serde(flatten)]
+    pub args: toml::Table,
 }
 
 // from /content/posts
@@ -32,7 +41,7 @@ pub struct SectionThing {
     pub headings: Vec<Heading>,
 }
 
-#[derive(Clone, Debug, Deserialize, Serialize)]
+#[derive(Clone, Debug, Default, Deserialize, Serialize)]
 pub struct Frontmatter {
     pub title: String,
 
@@ -79,18 +88,18 @@ pub struct Heading {
     pub id: String,
 }
 
-#[derive(Deserialize, Serialize, Debug)]
-#[serde(rename_all = "lowercase")]
-pub enum BlockType {
-    Metadata,
-    Plugin,
-}
-
+/// markdown captured sussg codeblocks
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Block {
     #[serde(rename = "type")]
     pub kind: BlockType,
-    pub name: String,
     #[serde(flatten)]
     pub data: toml::Table,
+}
+
+#[derive(Deserialize, Serialize, Debug)]
+#[serde(rename_all = "lowercase")]
+pub enum BlockType {
+    Frontmatter,
+    Plugin,
 }
