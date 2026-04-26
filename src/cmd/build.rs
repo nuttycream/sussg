@@ -26,7 +26,7 @@ pub fn build(path: &Path, is_local: bool, out: Option<&Path>, drafts: bool) -> R
 
     let site_url = config.general.url;
 
-    match fs::create_dir_all(&output_dir) {
+    match fs::create_dir_all(output_dir) {
         Ok(_) => println!("created {output_dir}"),
         Err(e) => println!("somehow failed to create {output_dir}: {e}"),
     }

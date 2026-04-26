@@ -51,7 +51,7 @@ pub fn convert(md_string: &str) -> (Frontmatter, String, Vec<Heading>, Vec<Plugi
                 //println!("heading: {}", curr_heading_str);
                 if let Some(level) = curr_heading_level {
                     headings.push(Heading {
-                        level: level,
+                        level,
                         text: curr_heading_str.to_owned(),
                         id: if let Some(id) = &curr_heading_id {
                             id.to_owned()
@@ -72,7 +72,7 @@ pub fn convert(md_string: &str) -> (Frontmatter, String, Vec<Heading>, Vec<Plugi
                 }
 
                 if inside_sussg {
-                    sussg_text.push_str(&text);
+                    sussg_text.push_str(text);
                     None
                 } else {
                     Some(event)
