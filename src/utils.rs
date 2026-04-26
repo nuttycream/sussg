@@ -77,7 +77,7 @@ pub fn read_content(
     content_root_path: &Path,
     styles: &Vec<Style>,
     templates: &Vec<Template>,
-    main_style: &Vec<String>,
+    main_style: &[String],
     base_template: &str,
 ) -> Result<Vec<TheThing>, ErrDis> {
     let mut things = Vec::new();
@@ -213,7 +213,7 @@ fn read_page(
     content_root_path: &Path,
     avail_styles: &Vec<Style>,
     avail_templs: &Vec<Template>,
-    main_styles: &Vec<String>,
+    main_styles: &[String],
     base_template: &str,
 ) -> Result<TheThing, ErrDis> {
     let (frontmatter, html_output, headings, plugin_args) = match read_markdown(page_path) {
@@ -268,15 +268,12 @@ fn read_page(
         .cloned()
         .expect("Base template not found!!");
 
-    match frontmatter.template {
-        Some(ref mustache_name) => {
-            for avail_mustache in avail_templs {
-                if avail_mustache.name == *mustache_name {
-                    mustache = avail_mustache.clone();
-                }
+    if let Some(ref mustache_name) = frontmatter.template {
+        for avail_mustache in avail_templs {
+            if avail_mustache.name == *mustache_name {
+                mustache = avail_mustache.to_owned();
             }
         }
-        None => {}
     }
 
     Ok(TheThing {
