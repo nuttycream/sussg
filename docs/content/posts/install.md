@@ -1,7 +1,7 @@
----
-title="Installation"
-description="install"
----
+```sussg
+type = "frontmatter"
+title = "Installation"
+```
 
 ## Installation
 

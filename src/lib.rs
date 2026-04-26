@@ -14,6 +14,21 @@ pub struct Template {
     pub template: String,
 }
 
+#[derive(Default, Debug, Deserialize, Serialize, Clone)]
+pub struct Plugin {
+    pub name: String,
+    pub content: String,
+}
+
+/// called within the markdown
+/// see Plugin for the raw html content
+#[derive(Debug, Deserialize, Serialize, Clone)]
+pub struct PluginArgs {
+    pub name: String,
+    #[serde(flatten)]
+    pub args: toml::Table,
+}
+
 // from /content/posts
 // this should all be gathered
 // from the frontmatter
@@ -26,7 +41,7 @@ pub struct SectionThing {
     pub headings: Vec<Heading>,
 }
 
-#[derive(Clone, Debug, Deserialize, Serialize)]
+#[derive(Clone, Debug, Default, Deserialize, Serialize)]
 pub struct Frontmatter {
     pub title: String,
 
@@ -45,8 +60,6 @@ pub struct Frontmatter {
 
     pub styles: Option<Vec<String>>,
     pub use_main: Option<bool>, // similar to use_base
-
-    pub github: Option<String>,
 }
 
 // Can be anything, a post,
@@ -64,6 +77,7 @@ pub struct TheThing {
     /// minijinja context
     pub section: Option<String>,
     pub headings: Vec<Heading>,
+    pub plugin_args: Vec<PluginArgs>,
 }
 
 /// Heading for toc info
@@ -72,4 +86,20 @@ pub struct Heading {
     pub level: u8,
     pub text: String,
     pub id: String,
+}
+
+/// markdown captured sussg codeblocks
+#[derive(Debug, Serialize, Deserialize)]
+pub struct Block {
+    #[serde(rename = "type")]
+    pub kind: BlockType,
+    #[serde(flatten)]
+    pub data: toml::Table,
+}
+
+#[derive(Deserialize, Serialize, Debug)]
+#[serde(rename_all = "lowercase")]
+pub enum BlockType {
+    Frontmatter,
+    Plugin,
 }

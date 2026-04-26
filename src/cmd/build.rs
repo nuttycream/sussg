@@ -46,13 +46,33 @@ pub fn build(path: &Path, is_local: bool, out: Option<&Path>, drafts: bool) -> R
         Err(e) => return Err(ErrDis::BadTemplates(e.to_string())),
     };
 
+    let plugins = match read_plugins(&main_path.join("plugins")) {
+        Ok(p) => p,
+        Err(e) => return Err(ErrDis::BadPlugin(e.to_string())),
+    };
+
     let mut env = Environment::new();
     minijinja_contrib::add_to_environment(&mut env);
 
+    // add regular html templates
     for template in &templates {
         match env.add_template(&template.name, &template.template) {
             Ok(_) => println!("added template: {} to environment", template.name),
             Err(e) => println!("could not add template {} because: {}", template.name, e),
+        }
+    }
+
+    // plugins are also html
+    for plugin in &plugins {
+        match env.add_template_owned(
+            // need identifier, otherwise can collide with
+            // regular templates, maybe add identifier prefix
+            // to template as well?
+            format!("plugins/{}", plugin.name),
+            plugin.content.to_owned(),
+        ) {
+            Ok(_) => println!("added plugin: {} to environment", plugin.name),
+            Err(e) => println!("could not add plugin {} because: {}", plugin.name, e),
         }
     }
 
@@ -95,7 +115,7 @@ pub fn build(path: &Path, is_local: bool, out: Option<&Path>, drafts: bool) -> R
     //println!("avail_templs:{:?}", mustaches);
     //println!("content:{:?}", content);
 
-    for thing in content {
+    for mut thing in content {
         if thing.frontmatter.draft.unwrap_or(false) && !drafts {
             continue;
         }
@@ -126,6 +146,22 @@ pub fn build(path: &Path, is_local: bool, out: Option<&Path>, drafts: bool) -> R
             Err(e) => return Err(ErrDis::BadTemplates(e.to_string())),
         };
 
+        for (idx, plugin) in thing.plugin_args.iter().enumerate() {
+            let plugin_name = format!("plugins/{}", plugin.name);
+
+            let rendered = match env.get_template(&plugin_name) {
+                Ok(t) => t
+                    .render(context! {
+                        args => &plugin.args,
+                    })
+                    .unwrap(),
+                Err(_) => String::new(),
+            };
+
+            let emitter = format!("<!--baka:{}-->", idx);
+            thing.content = thing.content.replace(&emitter, &rendered);
+        }
+
         let mut rendered = match template.render(context! {
             title => thing.frontmatter.title,
             content => thing.content,
@@ -133,7 +169,7 @@ pub fn build(path: &Path, is_local: bool, out: Option<&Path>, drafts: bool) -> R
             headings => thing.headings,
             sections,
             most_recent,
-            site_url
+            site_url,
         }) {
             Ok(r) => r,
             Err(e) => return Err(ErrDis::BadRender(e.to_string())),

@@ -1,12 +1,12 @@
-use crate::{convert::convert, errors::ErrDis};
 use std::{
     ffi::OsStr,
     fs,
     path::{Path, PathBuf},
 };
-
-use sussg::{Frontmatter, Heading, Style, Template, TheThing};
 use walkdir::WalkDir;
+
+use crate::errors::ErrDis;
+use sussg::{Frontmatter, Heading, Plugin, PluginArgs, Style, Template, TheThing};
 
 /// neat helper func specific for posts
 /// we can reuse get_out_path() but i gotta
@@ -76,7 +76,7 @@ pub fn read_static(static_path: &Path) -> Result<(), ErrDis> {
 pub fn read_content(
     content_root_path: &Path,
     styles: &Vec<Style>,
-    mustaches: &Vec<Template>,
+    templates: &Vec<Template>,
     main_style: &Vec<String>,
     base_template: &str,
 ) -> Result<Vec<TheThing>, ErrDis> {
@@ -90,7 +90,7 @@ pub fn read_content(
                 content.path(),
                 content_root_path,
                 styles,
-                mustaches,
+                templates,
                 main_style,
                 base_template,
             ) {
@@ -179,37 +179,33 @@ pub fn read_templates(template_path: &Path) -> Result<Vec<Template>, ErrDis> {
     Ok(mustaches)
 }
 
-/// simplified version of the original slug::slugify
-/// in the slug-rs crate
-pub fn slugify(s: &str) -> String {
-    let mut slug = String::with_capacity(s.len());
+pub fn read_plugins(plugin_path: &Path) -> Result<Vec<Plugin>, ErrDis> {
+    let mut plugins = Vec::new();
 
-    // true to avoid leading -
-    let mut prev_is_dash = true;
+    for plugin_file in WalkDir::new(plugin_path).into_iter().filter_map(|e| e.ok()) {
+        let yea = plugin_file.path().extension() == Some(OsStr::new("html"));
 
-    for c in s.chars() {
-        match c {
-            'a'..='z' | '0'..='9' => {
-                prev_is_dash = false;
-                slug.push(c);
-            }
-            'A'..='Z' => {
-                prev_is_dash = false;
-                slug.push(c.to_ascii_lowercase());
-            }
-            _ => {
-                if !prev_is_dash {
-                    slug.push('-');
-                    prev_is_dash = true;
-                }
-            }
+        if yea {
+            println!("processing plugin:{}", plugin_file.path().display());
+            let name = plugin_file
+                .path()
+                .file_name()
+                .and_then(OsStr::to_str)
+                .filter(|name| name.ends_with(".html"))
+                .map(|name| name.strip_suffix(".html").unwrap_or(name))
+                .unwrap_or("")
+                .to_string();
+
+            let content = match fs::read_to_string(plugin_file.path()) {
+                Ok(p) => p,
+                Err(e) => return Err(ErrDis::BadPlugin(e.to_string())),
+            };
+
+            plugins.push(Plugin { name, content });
         }
     }
 
-    if slug.ends_with('-') {
-        slug.pop();
-    }
-    slug
+    Ok(plugins)
 }
 
 fn read_page(
@@ -220,8 +216,8 @@ fn read_page(
     main_styles: &Vec<String>,
     base_template: &str,
 ) -> Result<TheThing, ErrDis> {
-    let (frontmatter, html_output, headings) = match read_markdown(page_path) {
-        Ok((fm, c, h)) => (fm, c, h),
+    let (frontmatter, html_output, headings, plugin_args) = match read_markdown(page_path) {
+        Ok((fm, c, h, p)) => (fm, c, h, p),
         Err(e) => return Err(ErrDis::BadMarkdown(e.to_string())),
     };
 
@@ -291,22 +287,23 @@ fn read_page(
         content: html_output,
         section,
         headings,
+        plugin_args,
     })
 }
 
-fn read_markdown(path: &Path) -> Result<(Frontmatter, String, Vec<Heading>), ErrDis> {
+fn read_markdown(
+    path: &Path,
+) -> Result<(Frontmatter, String, Vec<Heading>, Vec<PluginArgs>), ErrDis> {
     let md_string = match fs::read_to_string(path) {
         Ok(md) => md,
         Err(e) => return Err(ErrDis::BadMarkdownString(e.to_string())),
     };
 
-    let (frontmatter_string, html_output, headings) = convert(&md_string);
-    let frontmatter: Frontmatter = match toml::from_str(&frontmatter_string) {
-        Ok(fm) => fm,
-        Err(e) => return Err(ErrDis::BadFrontmatter(frontmatter_string, e.to_string())),
-    };
+    let (frontmatter, html_output, headings, plugin_args) = crate::convert::convert(&md_string);
 
-    Ok((frontmatter, html_output, headings))
+    let processed = crate::post_process::post_process(&html_output, &headings);
+
+    Ok((frontmatter, processed, headings, plugin_args))
 }
 
 /// find the :// then the next / after the main

@@ -26,6 +26,11 @@ pub fn init() {
         Err(e) => println!("failed to create ./static: {e}"),
     };
 
+    match fs::create_dir("plugins") {
+        Ok(_) => println!("./plugins created successfully"),
+        Err(e) => println!("failed to create ./plugins: {e}"),
+    };
+
     let toml = toml::to_string(&Config::default()).unwrap();
 
     File::create("config.toml")

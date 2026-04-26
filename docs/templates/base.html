@@ -34,6 +34,11 @@
             <div class="content">
                 {{ content | safe }}
             </div>
+            {% for b in blocks %}
+            <p> 
+                {{ b.type }} — {{ b.name }}
+            </p>
+            {% endfor %}
         </div>
     </body>
 </html>

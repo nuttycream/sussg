@@ -1,32 +1,40 @@
-use pulldown_cmark::{Event, MetadataBlockKind, Options, Tag as TagStart, TagEnd};
-use sussg::Heading;
+use pulldown_cmark::{CodeBlockKind, CowStr, Event, Options, Tag as TagStart, TagEnd};
+use sussg::{Block, Frontmatter, Heading, PluginArgs};
 
-use crate::{post_process::post_process, utils};
-
-pub fn convert(md_string: &str) -> (String, String, Vec<Heading>) {
+pub fn convert(md_string: &str) -> (Frontmatter, String, Vec<Heading>, Vec<PluginArgs>) {
     let mut options = Options::empty();
     options.insert(Options::ENABLE_HEADING_ATTRIBUTES);
     options.insert(Options::ENABLE_GFM);
     options.insert(Options::ENABLE_FOOTNOTES);
     options.insert(Options::ENABLE_WIKILINKS);
-    options.insert(Options::ENABLE_YAML_STYLE_METADATA_BLOCKS);
-    options.insert(Options::ENABLE_PLUSES_DELIMITED_METADATA_BLOCKS);
 
-    let mut inside_yaml = false;
-    let mut frontmatter = String::new();
+    let mut inside_sussg = false;
+    let mut sussg_text = String::new();
+    let mut blocks: Vec<String> = Vec::new();
 
     let mut headings = Vec::new();
     let mut curr_heading_level: Option<u8> = None;
     let mut curr_heading_str = String::new();
     let mut curr_heading_id: Option<String> = None;
 
-    let parser = pulldown_cmark::Parser::new_ext(md_string, options).map(|event| {
+    let parser = pulldown_cmark::Parser::new_ext(md_string, options).filter_map(|event| {
         match &event {
-            Event::Start(TagStart::MetadataBlock(MetadataBlockKind::YamlStyle)) => {
-                inside_yaml = true;
+            Event::Start(TagStart::CodeBlock(CodeBlockKind::Fenced(l)))
+                if l.as_ref() == "sussg" =>
+            {
+                inside_sussg = true;
+                None
             }
-            Event::End(TagEnd::MetadataBlock(MetadataBlockKind::YamlStyle)) => {
-                inside_yaml = false;
+            Event::End(TagEnd::CodeBlock) if inside_sussg => {
+                inside_sussg = false;
+
+                let idx = blocks.len();
+                blocks.push(sussg_text.to_owned());
+                sussg_text.clear();
+
+                Some(Event::Html(CowStr::Boxed(
+                    format!("<!--baka:{}-->", idx).into_boxed_str(),
+                )))
             }
             Event::Start(TagStart::Heading { level, id, .. }) => {
                 curr_heading_str.clear();
@@ -37,6 +45,7 @@ pub fn convert(md_string: &str) -> (String, String, Vec<Heading>) {
                     curr_heading_id = None;
                 }
                 //println!("heading level: {}", curr_heading_level);
+                Some(event)
             }
             Event::End(TagEnd::Heading(_)) => {
                 //println!("heading: {}", curr_heading_str);
@@ -47,7 +56,7 @@ pub fn convert(md_string: &str) -> (String, String, Vec<Heading>) {
                         id: if let Some(id) = &curr_heading_id {
                             id.to_owned()
                         } else {
-                            utils::slugify(&curr_heading_str.to_owned())
+                            slugify(&curr_heading_str.to_owned())
                         },
                     });
 
@@ -55,19 +64,22 @@ pub fn convert(md_string: &str) -> (String, String, Vec<Heading>) {
                     curr_heading_level = None;
                     curr_heading_id = None;
                 }
+                Some(event)
             }
             Event::Text(text) => {
-                if inside_yaml {
-                    frontmatter = text.to_string();
-                    //println!("{:?}", text);
-                }
                 if curr_heading_level.is_some() {
                     curr_heading_str.push_str(text);
                 }
+
+                if inside_sussg {
+                    sussg_text.push_str(&text);
+                    None
+                } else {
+                    Some(event)
+                }
             }
-            _ => {}
+            _ => Some(event),
         }
-        event
     });
 
     //println!("frontmatter:{:?}", frontmatter);
@@ -75,12 +87,66 @@ pub fn convert(md_string: &str) -> (String, String, Vec<Heading>) {
     let mut html_output = String::new();
     pulldown_cmark::html::push_html(&mut html_output, parser);
 
-    html_output = post_process(&html_output, &headings);
+    let blockies: Vec<Block> = blocks.iter().map(|b| toml::from_str(b).unwrap()).collect();
+
+    let mut frontmatter = Frontmatter::default();
+    let mut plugin_args = Vec::new();
+
+    for blocky in blockies {
+        match blocky.kind {
+            sussg::BlockType::Frontmatter => {
+                frontmatter = blocky.data.to_owned().try_into().unwrap();
+                //println!("{:#?}", frontmatter)
+            }
+            sussg::BlockType::Plugin => {
+                let plugin: PluginArgs = blocky.data.to_owned().try_into().unwrap();
+                plugin_args.push(plugin);
+                //println!("{:#?}", plugin_args)
+            }
+        }
+    }
+
+    //println!("{:#?}", blocks);
+
+    // handle plugins in post_process
 
     //println!("{html_output}");
     //println!("headings: {:#?}", headings);
 
-    (frontmatter, html_output, headings)
+    (frontmatter, html_output, headings, plugin_args)
+}
+
+/// simplified version of the original slug::slugify
+/// in the slug-rs crate
+fn slugify(s: &str) -> String {
+    let mut slug = String::with_capacity(s.len());
+
+    // true to avoid leading -
+    let mut prev_is_dash = true;
+
+    for c in s.chars() {
+        match c {
+            'a'..='z' | '0'..='9' => {
+                prev_is_dash = false;
+                slug.push(c);
+            }
+            'A'..='Z' => {
+                prev_is_dash = false;
+                slug.push(c.to_ascii_lowercase());
+            }
+            _ => {
+                if !prev_is_dash {
+                    slug.push('-');
+                    prev_is_dash = true;
+                }
+            }
+        }
+    }
+
+    if slug.ends_with('-') {
+        slug.pop();
+    }
+    slug
 }
 
 #[cfg(test)]
@@ -99,9 +165,9 @@ author: test author
 ### H3 test
 "#;
 
-        let (frontmatter, html, _headings) = convert(markdown);
+        let (frontmatter, html, _headings, _plugin_args) = convert(markdown);
 
-        assert!(frontmatter.contains("title: test title"));
+        assert!(frontmatter.title.contains("title: test title"));
         assert!(html.contains("<h1"));
         assert!(html.contains("H1 test"));
         assert!(html.contains("<h2"));
