@@ -6,7 +6,7 @@ use std::{
 use walkdir::WalkDir;
 
 use crate::errors::ErrDis;
-use sussg::{Block, Frontmatter, Heading, Plugin, Style, Template, TheThing};
+use sussg::{Frontmatter, Heading, Plugin, PluginArgs, Style, Template, TheThing};
 
 /// neat helper func specific for posts
 /// we can reuse get_out_path() but i gotta
@@ -77,7 +77,6 @@ pub fn read_content(
     content_root_path: &Path,
     styles: &Vec<Style>,
     templates: &Vec<Template>,
-    plugins: &Vec<Plugin>,
     main_style: &Vec<String>,
     base_template: &str,
 ) -> Result<Vec<TheThing>, ErrDis> {
@@ -92,7 +91,6 @@ pub fn read_content(
                 content_root_path,
                 styles,
                 templates,
-                plugins,
                 main_style,
                 base_template,
             ) {
@@ -215,12 +213,11 @@ fn read_page(
     content_root_path: &Path,
     avail_styles: &Vec<Style>,
     avail_templs: &Vec<Template>,
-    avail_plugins: &Vec<Plugin>,
     main_styles: &Vec<String>,
     base_template: &str,
 ) -> Result<TheThing, ErrDis> {
-    let (frontmatter, html_output, headings) = match read_markdown(page_path, avail_plugins) {
-        Ok((fm, c, h)) => (fm, c, h),
+    let (frontmatter, html_output, headings, plugin_args) = match read_markdown(page_path) {
+        Ok((fm, c, h, p)) => (fm, c, h, p),
         Err(e) => return Err(ErrDis::BadMarkdown(e.to_string())),
     };
 
@@ -290,14 +287,13 @@ fn read_page(
         content: html_output,
         section,
         headings,
-        plugins: avail_plugins.to_owned(),
+        plugin_args,
     })
 }
 
 fn read_markdown(
     path: &Path,
-    avail_plugins: &Vec<Plugin>,
-) -> Result<(Frontmatter, String, Vec<Heading>), ErrDis> {
+) -> Result<(Frontmatter, String, Vec<Heading>, Vec<PluginArgs>), ErrDis> {
     let md_string = match fs::read_to_string(path) {
         Ok(md) => md,
         Err(e) => return Err(ErrDis::BadMarkdownString(e.to_string())),
@@ -305,10 +301,9 @@ fn read_markdown(
 
     let (frontmatter, html_output, headings, plugin_args) = crate::convert::convert(&md_string);
 
-    let processed =
-        crate::post_process::post_process(&html_output, &headings, avail_plugins, &plugin_args);
+    let processed = crate::post_process::post_process(&html_output, &headings);
 
-    Ok((frontmatter, processed, headings))
+    Ok((frontmatter, processed, headings, plugin_args))
 }
 
 /// find the :// then the next / after the main

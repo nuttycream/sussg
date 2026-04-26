@@ -1,19 +1,9 @@
-use sussg::{Heading, Plugin, PluginArgs};
+use sussg::Heading;
 
-pub fn post_process(
-    html: &str,
-    headings: &[Heading],
-    available_plugins: &[Plugin],
-    plugin_args: &[PluginArgs],
-) -> String {
-    let mut processed = String::new();
+pub fn post_process(html: &str, headings: &[Heading]) -> String {
     // ideally we can make some of these configurable
     // for now just handle headings ids
-    processed = add_heading_ids(html, headings);
-
-    processed = replace_plugin_thing(&processed, available_plugins, plugin_args);
-
-    processed
+    add_heading_ids(html, headings)
 }
 
 fn add_heading_ids(html: &str, headings: &[Heading]) -> String {
@@ -23,7 +13,7 @@ fn add_heading_ids(html: &str, headings: &[Heading]) -> String {
         let without_id = format!("<h{}>", heading.level);
         let with_id = format!("<h{} id=\"{}\">", heading.level, heading.id);
 
-        println!("with_id:{}\nwithout_id:{}", with_id, without_id);
+        //println!("with_id:{}\nwithout_id:{}", with_id, without_id);
 
         // replace the ones without em
         if let Some(pos) = to_add.find(&without_id) {
@@ -37,17 +27,4 @@ fn add_heading_ids(html: &str, headings: &[Heading]) -> String {
     }
 
     to_add
-}
-
-fn replace_plugin_thing(
-    html: &str,
-    available_plugins: &[Plugin],
-    plugin_args: &[PluginArgs],
-) -> String {
-    let html = html.to_owned();
-    for (idx, plugin) in available_plugins.iter().enumerate() {
-        let emitter = format!("<!--baka:{}-->", idx);
-    }
-
-    html
 }
