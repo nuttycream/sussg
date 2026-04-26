@@ -24,7 +24,7 @@ title="yep"
 ```sussg
 type= "plugin"
 name= "3d_viewer"
-src = "/models/Astronaut.glb"
+src = "models/Astronaut.glb"
 ```
 
 ## Features
