@@ -65,7 +65,7 @@ pub fn serve(
     port: u32,
     out: Option<&Path>,
     drafts: bool,
-) -> std::io::Result<()> {
+) -> anyhow::Result<()> {
     let _ = crate::cmd::build::build(content_path, true, out, drafts);
 
     let public_dir = PathBuf::from("./public");
@@ -73,6 +73,8 @@ pub fn serve(
     let reloader = Reloader::default();
 
     let content_path = content_path.to_owned();
+
+    // uh
     let out = out.map(|p| p.to_owned());
 
     println!(

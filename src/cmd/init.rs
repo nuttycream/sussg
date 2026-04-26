@@ -1,42 +1,44 @@
 use std::{
     fs::{self, File},
-    io::Write,
+    io::{ErrorKind, Write},
+    path::Path,
 };
+
+use anyhow::Context;
 
 use crate::config::Config;
 
-pub fn init() {
-    match fs::create_dir("content") {
-        Ok(_) => println!("./content created successfully"),
-        Err(e) => println!("failed to create ./content: {e}"),
-    };
+// todo
+const DIRS: &[&str] = &["content", "styles", "templates", "static", "plugins"];
 
-    match fs::create_dir("styles") {
-        Ok(_) => println!("./styles created successfully"),
-        Err(e) => println!("failed to create ./styles: {e}"),
-    };
+pub fn init(path: &Path) -> anyhow::Result<()> {
+    for dir in DIRS {
+        let path = path.join(dir);
+        match fs::create_dir(path) {
+            Ok(()) => println!("./{dir} created successfully"),
+            Err(e) if e.kind() == ErrorKind::AlreadyExists => {
+                println!("./{dir} already exists, skipping");
+            }
+            Err(e) => {
+                return Err(e).with_context(|| format!("could not create ./{dir}"));
+            }
+        }
+    }
 
-    match fs::create_dir("templates") {
-        Ok(_) => println!("./templates created successfully"),
-        Err(e) => println!("failed to create ./templates: {e}"),
-    };
+    let path = path.join("config.toml");
+    match File::create(path) {
+        Ok(mut file) => {
+            let toml = toml::to_string(&Config::default())?;
 
-    match fs::create_dir("static") {
-        Ok(_) => println!("./static created successfully"),
-        Err(e) => println!("failed to create ./static: {e}"),
-    };
+            file.write_all(toml.as_bytes())?;
 
-    match fs::create_dir("plugins") {
-        Ok(_) => println!("./plugins created successfully"),
-        Err(e) => println!("failed to create ./plugins: {e}"),
-    };
-
-    let toml = toml::to_string(&Config::default()).unwrap();
-
-    File::create("config.toml")
-        .and_then(|mut file| file.write_all(toml.as_bytes()))
-        .map(|_| println!("config created successfully"))
-        .unwrap_or_else(|e| println!("failed to create config: {e}"));
+            println!("config.toml created successfully");
+        }
+        Err(e) if e.kind() == ErrorKind::AlreadyExists => {
+            println!("config.toml already exists, skipping");
+        }
+        Err(e) => return Err(e).context("could not create config.toml")?,
+    }
 
     println!(
         "
@@ -46,4 +48,6 @@ static files such as images/pdfs/etc go in static
 then run 'sussg serve' to preview locally.
     "
     );
+
+    Ok(())
 }

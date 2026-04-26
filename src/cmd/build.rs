@@ -4,12 +4,13 @@ use std::{
     path::Path,
 };
 
+use anyhow::Context;
 use minijinja::{Environment, context};
 use sussg::SectionThing;
 
-use crate::{config::load_config, errors::ErrDis, utils::*};
+use crate::{config::load_config, utils::*};
 
-pub fn build(path: &Path, is_local: bool, out: Option<&Path>, drafts: bool) -> Result<(), ErrDis> {
+pub fn build(path: &Path, is_local: bool, out: Option<&Path>, drafts: bool) -> anyhow::Result<()> {
     let mut config = load_config(path);
 
     if is_local {
@@ -31,61 +32,41 @@ pub fn build(path: &Path, is_local: bool, out: Option<&Path>, drafts: bool) -> R
         Err(e) => println!("somehow failed to create {output_dir}: {e}"),
     }
 
-    match read_static(&main_path.join("static")) {
-        Ok(()) => {}
-        Err(e) => return Err(ErrDis::BadStaticFiles(e.to_string())),
-    }
+    read_static(&main_path.join("static"))?;
 
-    let styles = match read_styles(&main_path.join("styles")) {
-        Ok(s) => s,
-        Err(e) => return Err(ErrDis::BadStyles(e.to_string())),
-    };
+    let styles = read_styles(&main_path.join("styles"))?;
+    let templates = read_templates(&main_path.join("templates"))?;
 
-    let templates = match read_templates(&main_path.join("templates")) {
-        Ok(m) => m,
-        Err(e) => return Err(ErrDis::BadTemplates(e.to_string())),
-    };
-
-    let plugins = match read_plugins(&main_path.join("plugins")) {
-        Ok(p) => p,
-        Err(e) => return Err(ErrDis::BadPlugin(e.to_string())),
-    };
+    let plugins = read_plugins(&main_path.join("plugins"))?;
 
     let mut env = Environment::new();
     minijinja_contrib::add_to_environment(&mut env);
 
     // add regular html templates
     for template in &templates {
-        match env.add_template(&template.name, &template.template) {
-            Ok(_) => println!("added template: {} to environment", template.name),
-            Err(e) => println!("could not add template {} because: {}", template.name, e),
-        }
+        env.add_template(&template.name, &template.template)
+            .with_context(|| format!("could not add template {}", template.name))?;
     }
 
     // plugins are also html
     for plugin in &plugins {
-        match env.add_template_owned(
+        env.add_template_owned(
             // need identifier, otherwise can collide with
             // regular templates, maybe add identifier prefix
             // to template as well?
             format!("plugins/{}", plugin.name),
             plugin.content.to_owned(),
-        ) {
-            Ok(_) => println!("added plugin: {} to environment", plugin.name),
-            Err(e) => println!("could not add plugin {} because: {}", plugin.name, e),
-        }
+        )
+        .with_context(|| format!("could not add plugin {}", plugin.name))?;
     }
 
-    let content = match read_content(
+    let content = read_content(
         &main_path.join("content"),
         &styles,
         &templates,
         &config.style.main,
         &config.template.base,
-    ) {
-        Ok(c) => c,
-        Err(e) => return Err(ErrDis::BadContent(e.to_string())),
-    };
+    )?;
 
     // key is the content_dir_name
     let mut sections: HashMap<String, Vec<SectionThing>> = HashMap::new();
@@ -96,7 +77,7 @@ pub fn build(path: &Path, is_local: bool, out: Option<&Path>, drafts: bool) -> R
             continue;
         }
 
-        if let Some(ref section) = thing.section {
+        if let Some(section) = &thing.section {
             let url = get_post_url(&site_url, &thing.path);
 
             let entry = sections.entry(section.to_owned()).or_default();
@@ -141,10 +122,7 @@ pub fn build(path: &Path, is_local: bool, out: Option<&Path>, drafts: bool) -> R
             ));
         }
 
-        let template = match env.get_template(&thing.template.name) {
-            Ok(t) => t,
-            Err(e) => return Err(ErrDis::BadTemplates(e.to_string())),
-        };
+        let template = env.get_template(&thing.template.name)?;
 
         for (idx, plugin) in thing.plugin_args.iter().enumerate() {
             let plugin_name = format!("plugins/{}", plugin.name);
@@ -169,7 +147,7 @@ pub fn build(path: &Path, is_local: bool, out: Option<&Path>, drafts: bool) -> R
             thing.content = thing.content.replace(&emitter, &rendered);
         }
 
-        let mut rendered = match template.render(context! {
+        let mut rendered = template.render(context! {
             title => thing.frontmatter.title,
             content => thing.content,
             frontmatter => thing.frontmatter,
@@ -177,10 +155,7 @@ pub fn build(path: &Path, is_local: bool, out: Option<&Path>, drafts: bool) -> R
             sections,
             most_recent,
             site_url,
-        }) {
-            Ok(r) => r,
-            Err(e) => return Err(ErrDis::BadRender(e.to_string())),
-        };
+        })?;
 
         rendered = link + &rendered;
 
