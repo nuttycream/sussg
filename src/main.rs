@@ -1,7 +1,6 @@
 pub mod cmd;
 pub mod config;
 pub mod convert;
-pub mod errors;
 pub mod post_process;
 pub mod utils;
 
@@ -30,7 +29,9 @@ OPTIONS:
 
 #[derive(Debug)]
 enum Command {
-    Init,
+    Init {
+        path: PathBuf,
+    },
     Build {
         path: PathBuf,
         local: bool,
@@ -55,7 +56,13 @@ fn parse_args() -> Result<Command, pico_args::Error> {
 
     let subcommand = pargs.subcommand()?;
     let cmd = match subcommand.as_deref() {
-        Some("init") => Command::Init,
+        Some("init") => {
+            let path = pargs
+                .opt_value_from_str(["-p", "--path"])?
+                .unwrap_or_else(|| PathBuf::from("./"));
+
+            Command::Init { path }
+        }
         Some("build") => {
             let drafts = pargs
                 .opt_value_from_str(["-d", "--drafts"])?
@@ -123,28 +130,29 @@ fn main() {
     let cmd = match parse_args() {
         Ok(v) => v,
         Err(e) => {
-            eprintln!("Error: {}.", e);
+            eprintln!("error: {e:#}.");
             std::process::exit(1);
         }
     };
 
-    match cmd {
-        Command::Init => cmd::init::init(),
+    let res = match cmd {
+        Command::Init { path } => cmd::init::init(&path),
         Command::Build {
             path,
             local,
             out,
             drafts,
-        } => {
-            cmd::build::build(&path, local, out.as_deref(), drafts).unwrap();
-        }
+        } => cmd::build::build(&path, local, out.as_deref(), drafts),
         Command::Serve {
             path,
             port,
             out,
             drafts,
-        } => {
-            cmd::serve::serve(&path, port, out.as_deref(), drafts).unwrap();
-        }
+        } => cmd::serve::serve(&path, port, out.as_deref(), drafts),
+    };
+
+    if let Err(e) = res {
+        eprintln!("error: {e:#}.");
+        std::process::exit(1);
     }
 }
