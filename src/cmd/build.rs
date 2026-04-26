@@ -153,6 +153,12 @@ pub fn build(path: &Path, is_local: bool, out: Option<&Path>, drafts: bool) -> R
                 Ok(t) => t
                     .render(context! {
                         args => &plugin.args,
+                        title => thing.frontmatter.title,
+                        content => thing.content,
+                        frontmatter => thing.frontmatter,
+                        headings => thing.headings,
+                        sections,
+                        most_recent,
                     })
                     .unwrap(),
                 Err(_) => String::new(),
