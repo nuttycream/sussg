@@ -159,6 +159,7 @@ pub fn build(path: &Path, is_local: bool, out: Option<&Path>, drafts: bool) -> R
                         headings => thing.headings,
                         sections,
                         most_recent,
+                        site_url,
                     })
                     .unwrap(),
                 Err(_) => String::new(),
