@@ -33,9 +33,7 @@
           devShells.default = mkShell {
             name = "sussg";
             packages = with pkgs; [
-              rust-bin.stable.latest.minimal
-              rust-analyzer
-              rustfmt
+              rust-bin.stable.latest.default
             ];
 
             buildInputs = [
