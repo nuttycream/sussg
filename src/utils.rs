@@ -5,7 +5,6 @@ use std::{
 };
 use walkdir::WalkDir;
 
-use crate::errors::ErrDis;
 use sussg::{Frontmatter, Heading, Plugin, PluginArgs, Style, Template, TheThing};
 
 /// neat helper func specific for posts
@@ -54,7 +53,7 @@ pub fn get_out_path(content_root_path: &Path) -> PathBuf {
     }
 }
 
-pub fn read_static(static_path: &Path) -> Result<(), ErrDis> {
+pub fn read_static(static_path: &Path) -> anyhow::Result<()> {
     // maybe add some optimizations to images here? hmmmm?
     for static_file in WalkDir::new(static_path).into_iter().filter_map(|e| e.ok()) {
         let from = static_file.path();
@@ -79,24 +78,21 @@ pub fn read_content(
     templates: &Vec<Template>,
     main_style: &[String],
     base_template: &str,
-) -> Result<Vec<TheThing>, ErrDis> {
+) -> anyhow::Result<Vec<TheThing>> {
     let mut things = Vec::new();
     for content in WalkDir::new(content_root_path)
         .into_iter()
         .filter_map(|e| e.ok())
     {
         if content.path().extension() == Some(OsStr::new("md")) {
-            let thing = match read_page(
+            let thing = read_page(
                 content.path(),
                 content_root_path,
                 styles,
                 templates,
                 main_style,
                 base_template,
-            ) {
-                Ok(thing) => thing,
-                Err(e) => return Err(ErrDis::BadPage(e.to_string())),
-            };
+            )?;
 
             things.push(thing);
         }
@@ -105,7 +101,7 @@ pub fn read_content(
     Ok(things)
 }
 
-pub fn read_styles(styles_path: &Path) -> Result<Vec<Style>, ErrDis> {
+pub fn read_styles(styles_path: &Path) -> anyhow::Result<Vec<Style>> {
     let mut styles = Vec::new();
     for style_file in WalkDir::new(styles_path).into_iter().filter_map(|e| e.ok()) {
         if style_file.path().extension() != Some(OsStr::new("css")) {
@@ -148,7 +144,7 @@ pub fn read_styles(styles_path: &Path) -> Result<Vec<Style>, ErrDis> {
     Ok(styles)
 }
 
-pub fn read_templates(template_path: &Path) -> Result<Vec<Template>, ErrDis> {
+pub fn read_templates(template_path: &Path) -> anyhow::Result<Vec<Template>> {
     let mut mustaches = Vec::new();
 
     for template_file in WalkDir::new(template_path)
@@ -167,10 +163,8 @@ pub fn read_templates(template_path: &Path) -> Result<Vec<Template>, ErrDis> {
                 .map(|name| name.strip_suffix(".html").unwrap_or(name))
                 .unwrap_or("")
                 .to_string();
-            let template = match fs::read_to_string(template_file.path()) {
-                Ok(t) => t,
-                Err(e) => return Err(ErrDis::BadTemplates(e.to_string())),
-            };
+
+            let template = fs::read_to_string(template_file.path())?;
 
             mustaches.push(Template { name, template });
         }
@@ -179,7 +173,7 @@ pub fn read_templates(template_path: &Path) -> Result<Vec<Template>, ErrDis> {
     Ok(mustaches)
 }
 
-pub fn read_plugins(plugin_path: &Path) -> Result<Vec<Plugin>, ErrDis> {
+pub fn read_plugins(plugin_path: &Path) -> anyhow::Result<Vec<Plugin>> {
     let mut plugins = Vec::new();
 
     for plugin_file in WalkDir::new(plugin_path).into_iter().filter_map(|e| e.ok()) {
@@ -196,10 +190,7 @@ pub fn read_plugins(plugin_path: &Path) -> Result<Vec<Plugin>, ErrDis> {
                 .unwrap_or("")
                 .to_string();
 
-            let content = match fs::read_to_string(plugin_file.path()) {
-                Ok(p) => p,
-                Err(e) => return Err(ErrDis::BadPlugin(e.to_string())),
-            };
+            let content = fs::read_to_string(plugin_file.path())?;
 
             plugins.push(Plugin { name, content });
         }
@@ -215,11 +206,8 @@ fn read_page(
     avail_templs: &Vec<Template>,
     main_styles: &[String],
     base_template: &str,
-) -> Result<TheThing, ErrDis> {
-    let (frontmatter, html_output, headings, plugin_args) = match read_markdown(page_path) {
-        Ok((fm, c, h, p)) => (fm, c, h, p),
-        Err(e) => return Err(ErrDis::BadMarkdown(e.to_string())),
-    };
+) -> anyhow::Result<TheThing> {
+    let (frontmatter, html_output, headings, plugin_args) = read_markdown(page_path)?;
 
     println!("processing page:{}", page_path.display());
 
@@ -290,11 +278,8 @@ fn read_page(
 
 fn read_markdown(
     path: &Path,
-) -> Result<(Frontmatter, String, Vec<Heading>, Vec<PluginArgs>), ErrDis> {
-    let md_string = match fs::read_to_string(path) {
-        Ok(md) => md,
-        Err(e) => return Err(ErrDis::BadMarkdownString(e.to_string())),
-    };
+) -> anyhow::Result<(Frontmatter, String, Vec<Heading>, Vec<PluginArgs>)> {
+    let md_string = fs::read_to_string(path)?;
 
     let (frontmatter, html_output, headings, plugin_args) = crate::convert::convert(&md_string);
 
