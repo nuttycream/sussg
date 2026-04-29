@@ -155,10 +155,11 @@ mod tests {
 
     #[test]
     fn test_convert() {
-        let markdown = r#"---
-title: test title
-author: test author
----
+        let markdown = r#"
+```sussg
+type="frontmatter"
+title="test title"
+```
 
 # H1 test
 ## H2 test
@@ -167,7 +168,7 @@ author: test author
 
         let (frontmatter, html, _headings, _plugin_args) = convert(markdown);
 
-        assert!(frontmatter.title.contains("title: test title"));
+        assert!(frontmatter.title.contains("test title"));
         assert!(html.contains("<h1"));
         assert!(html.contains("H1 test"));
         assert!(html.contains("<h2"));
