@@ -3,43 +3,81 @@ use std::{fs, path::Path};
 use serde::{Deserialize, Serialize};
 
 #[derive(Deserialize, Serialize)]
+#[serde(default)]
 pub struct Config {
     pub general: GeneralConfig,
     pub style: StyleConfig,
     pub template: TemplateConfig,
+    pub serve: ServeConfig,
 }
 
 #[derive(Deserialize, Serialize)]
+#[serde(default)]
 pub struct GeneralConfig {
     pub url: String,
     pub output_dir: String,
 }
 
 #[derive(Deserialize, Serialize)]
+#[serde(default)]
 pub struct StyleConfig {
     pub main: Vec<String>,
 }
 
 #[derive(Deserialize, Serialize)]
+#[serde(default)]
 pub struct TemplateConfig {
     pub base: String,
+}
+
+#[derive(Deserialize, Serialize)]
+#[serde(default)]
+pub struct ServeConfig {
+    pub port: u32,
+    pub drafts: bool,
 }
 
 impl Default for Config {
     fn default() -> Self {
         Self {
-            general: GeneralConfig {
-                url: "/".to_string(),
-                output_dir: "public".to_string(),
-            },
+            general: GeneralConfig::default(),
+            style: StyleConfig::default(),
+            template: TemplateConfig::default(),
+            serve: ServeConfig::default(),
+        }
+    }
+}
 
-            style: StyleConfig {
-                main: vec!["main".to_string()],
-            },
+impl Default for GeneralConfig {
+    fn default() -> Self {
+        Self {
+            url: "/".to_string(),
+            output_dir: "public".to_string(),
+        }
+    }
+}
 
-            template: TemplateConfig {
-                base: "base".to_string(),
-            },
+impl Default for StyleConfig {
+    fn default() -> Self {
+        Self {
+            main: vec!["main".to_string()],
+        }
+    }
+}
+
+impl Default for TemplateConfig {
+    fn default() -> Self {
+        Self {
+            base: "base".to_string(),
+        }
+    }
+}
+
+impl Default for ServeConfig {
+    fn default() -> Self {
+        Self {
+            port: 3030,
+            drafts: true,
         }
     }
 }
