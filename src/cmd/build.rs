@@ -8,28 +8,22 @@ use anyhow::Context;
 use minijinja::{Environment, context};
 use sussg::SectionThing;
 
-use crate::{config::load_config, utils::*};
+use crate::{config::Config, utils::*};
 
-pub fn build(path: &Path, is_local: bool, out: Option<&Path>, drafts: bool) -> anyhow::Result<()> {
-    let mut config = load_config(path);
-
+pub fn build(path: &Path, is_local: bool, mut config: Config) -> anyhow::Result<()> {
     if is_local {
         config.general.url = "/".to_owned();
     }
 
     let main_path = path.to_path_buf();
 
-    let output_dir = if let Some(out) = out {
-        out.to_str().unwrap_or(&config.general.output_dir)
-    } else {
-        &config.general.output_dir
-    };
+    let output_dir = config.general.output_dir;
 
     let site_url = config.general.url;
 
-    match fs::create_dir_all(output_dir) {
-        Ok(_) => println!("created {output_dir}"),
-        Err(e) => println!("somehow failed to create {output_dir}: {e}"),
+    match fs::create_dir_all(&output_dir) {
+        Ok(_) => println!("created {}", output_dir.display()),
+        Err(e) => println!("somehow failed to create {}: {}", output_dir.display(), e),
     }
 
     read_static(&main_path.join("static"))?;
@@ -73,7 +67,7 @@ pub fn build(path: &Path, is_local: bool, out: Option<&Path>, drafts: bool) -> a
 
     for thing in content.iter() {
         // prevent minijinja from reading drafts if they're not enabled
-        if thing.frontmatter.draft.unwrap_or(false) && !drafts {
+        if thing.frontmatter.draft.unwrap_or(false) && !config.general.drafts {
             continue;
         }
 
@@ -97,7 +91,7 @@ pub fn build(path: &Path, is_local: bool, out: Option<&Path>, drafts: bool) -> a
     //println!("content:{:?}", content);
 
     for mut thing in content {
-        if thing.frontmatter.draft.unwrap_or(false) && !drafts {
+        if thing.frontmatter.draft.unwrap_or(false) && !config.general.drafts {
             continue;
         }
 

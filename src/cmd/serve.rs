@@ -10,6 +10,8 @@ use std::{
 };
 use walkdir::WalkDir;
 
+use crate::config::Config;
+
 const SSE_RELOAD_JS: &[u8] = br#"<script data-event-stream="/events">(() => {
   const inputs = document.currentScript.dataset;
   addEventListener("pageshow", () => {
@@ -60,13 +62,8 @@ impl Reloader {
     }
 }
 
-pub fn serve(
-    content_path: &Path,
-    port: u32,
-    out: Option<&Path>,
-    drafts: bool,
-) -> anyhow::Result<()> {
-    let _ = crate::cmd::build::build(content_path, true, out, drafts);
+pub fn serve(content_path: &Path, config: Config) -> anyhow::Result<()> {
+    let _ = crate::cmd::build::build(content_path, true, config.to_owned());
 
     let public_dir = PathBuf::from("./public");
 
@@ -74,23 +71,19 @@ pub fn serve(
 
     let content_path = content_path.to_owned();
 
-    // uh
-    let out = out.map(|p| p.to_owned());
-
     println!(
         "serving from: {}\nwatching for changes in:\n{}",
         public_dir.canonicalize()?.display(),
         PATHS_TO_WATCH.join("\n")
     );
 
-    let listener = TcpListener::bind(format!("127.0.0.1:{}", port))?;
-    println!("listening on http://127.0.0.1:{}", port);
+    let listener = TcpListener::bind(format!("127.0.0.1:{}", config.serve.port))?;
+    println!("listening on http://127.0.0.1:{}", config.serve.port);
 
     watch_for_changes(
         content_path.to_owned(),
-        out.map(|p| p.to_owned()),
-        drafts,
         reloader.to_owned(),
+        config.to_owned(),
     );
 
     for stream in listener.incoming() {
@@ -106,12 +99,7 @@ pub fn serve(
     Ok(())
 }
 
-fn watch_for_changes(
-    content_path: PathBuf,
-    out: Option<PathBuf>,
-    drafts: bool,
-    reloader: Reloader,
-) {
+fn watch_for_changes(content_path: PathBuf, reloader: Reloader, config: Config) {
     thread::spawn(move || {
         let mut previous = check_metadata(&content_path).unwrap();
         loop {
@@ -123,7 +111,7 @@ fn watch_for_changes(
 
             if curr != previous {
                 println!("change detected, rebuilding...");
-                let _ = crate::cmd::build::build(&content_path, true, out.as_deref(), drafts);
+                let _ = crate::cmd::build::build(&content_path, true, config.to_owned());
                 reloader.notify();
                 previous = curr;
             }

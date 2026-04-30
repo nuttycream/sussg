@@ -6,6 +6,8 @@ pub mod utils;
 
 use std::path::PathBuf;
 
+use crate::config::load_config;
+
 const HELP: &str = "\
 sussg - a simple static site generator
 
@@ -142,13 +144,33 @@ fn main() {
             local,
             out,
             drafts,
-        } => cmd::build::build(&path, local, out.as_deref(), drafts),
+        } => {
+            let mut cfg = load_config(&path);
+
+            if let Some(out) = out {
+                cfg.general.output_dir = out;
+            }
+
+            cfg.general.drafts = drafts;
+
+            cmd::build::build(&path, local, cfg)
+        }
         Command::Serve {
             path,
             port,
             out,
             drafts,
-        } => cmd::serve::serve(&path, port, out.as_deref(), drafts),
+        } => {
+            let mut cfg = load_config(&path);
+
+            if let Some(out) = out {
+                cfg.general.output_dir = out;
+            }
+            cfg.serve.port = port;
+            cfg.general.drafts = drafts;
+
+            cmd::serve::serve(&path, cfg)
+        }
     };
 
     if let Err(e) = res {
