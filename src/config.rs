@@ -1,8 +1,11 @@
-use std::{fs, path::Path};
+use std::{
+    fs,
+    path::{Path, PathBuf},
+};
 
 use serde::{Deserialize, Serialize};
 
-#[derive(Deserialize, Serialize)]
+#[derive(Default, Deserialize, Serialize, Clone)]
 #[serde(default)]
 pub struct Config {
     pub general: GeneralConfig,
@@ -11,48 +14,57 @@ pub struct Config {
     pub serve: ServeConfig,
 }
 
-#[derive(Deserialize, Serialize)]
+#[derive(Deserialize, Serialize, Clone)]
 #[serde(default)]
 pub struct GeneralConfig {
+    /// site_url
+    /// defaults to "/"
+    /// locally serving will
+    /// always use "/"
     pub url: String,
-    pub output_dir: String,
-}
-
-#[derive(Deserialize, Serialize)]
-#[serde(default)]
-pub struct StyleConfig {
-    pub main: Vec<String>,
-}
-
-#[derive(Deserialize, Serialize)]
-#[serde(default)]
-pub struct TemplateConfig {
-    pub base: String,
-}
-
-#[derive(Deserialize, Serialize)]
-#[serde(default)]
-pub struct ServeConfig {
-    pub port: u32,
+    /// output directory
+    /// defaults to public/
+    pub output_dir: PathBuf,
+    /// allow content marked as drafts
+    /// to be included
     pub drafts: bool,
 }
 
-impl Default for Config {
-    fn default() -> Self {
-        Self {
-            general: GeneralConfig::default(),
-            style: StyleConfig::default(),
-            template: TemplateConfig::default(),
-            serve: ServeConfig::default(),
-        }
-    }
+#[derive(Deserialize, Serialize, Clone)]
+#[serde(default)]
+pub struct StyleConfig {
+    /// main list of styles
+    /// to inject, bypasses
+    /// frontmatter
+    pub main: Vec<String>,
+}
+
+#[derive(Deserialize, Serialize, Clone)]
+#[serde(default)]
+pub struct TemplateConfig {
+    /// base template file name
+    /// that is used when no
+    /// template is defined
+    pub base: String,
+}
+
+#[derive(Deserialize, Serialize, Clone)]
+#[serde(default)]
+pub struct ServeConfig {
+    /// port to serve to
+    /// defaults to 3030
+    pub port: u32,
+    /// show drafts during
+    /// serve
+    pub drafts: bool,
 }
 
 impl Default for GeneralConfig {
     fn default() -> Self {
         Self {
             url: "/".to_string(),
-            output_dir: "public".to_string(),
+            output_dir: "public".into(),
+            drafts: false,
         }
     }
 }
@@ -92,12 +104,12 @@ pub fn load_config(path: &Path) -> Config {
         Ok(cfg_string) => match toml::from_str(&cfg_string) {
             Ok(cfg) => cfg,
             Err(e) => {
-                println!("failed to convert config.toml: {e}");
+                eprintln!("failed to convert config.toml:\n{e}\nusing defaults");
                 Config::default()
             }
         },
         Err(e) => {
-            println!("failed to read config.toml: {e}");
+            eprintln!("failed to read config.toml:\n{e}\nusing defaults");
             Config::default()
         }
     }
