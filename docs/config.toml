@@ -4,7 +4,7 @@ output_dir = "public"
 
 [style]
 # default styles to use if not otherwise specified in the frontmatter
-main = ["main", "fonts"] 
+main = ["main", "fonts", "prism"] 
 
 [template]
 base = "base" # default template to use if not otherwise specified in the frontmatter

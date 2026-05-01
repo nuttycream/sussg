@@ -1,4 +1,13 @@
 @font-face {
+  font-family: "CommitMono";
+  src: url("fonts/CommitMono-400.woff2") format("woff2");
+  font-weight: 400;
+  font-style: normal;
+}
+
+@font-face {
   font-family: "IBMPlexSans";
-  src: url(fonts/IBMPlexSans.ttf);
+  src: url("fonts/IBMPlexSans.woff2") format("woff2");
+  font-weight: 400;
+  font-style: normal;
 }
