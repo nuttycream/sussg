@@ -1,44 +1,32 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-    <head>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1">
-        <link rel="shortcut icon" type="image/x-icon" href="{{ site_url }}favicon.ico">
-        <title>{{ title }}</title>
-
-    </head>
-    <body>
-        <div class="container">
-            <nav>
-                <a href="{{ site_url }}"><h3>Home</h3></a>
-                <ul class="nav-list">
-                    {% for post in sections.posts %}
-                    <li class="nav-item">
-                        <a class="nav-link" href="{{ post.url }}">{{ post.title }}</a>
-                        {% if post.headings %}
-                        <ul>
-                            {% for heading in post.headings %}
-                            <li>
-                                <a class="heading-link" 
-                                    href="{{ post.url }}#{{ heading.id }}">
-                                    {{ heading.text }}
-                                </a>
-                            </li>
-                            {% endfor %}
-                        </ul>
-                        {% endif %}
-                    </li>
-                    {% endfor %}
-                </ul>
-            </nav>
-            <div class="content">
-                {{ content | safe }}
-            </div>
-            {% for b in blocks %}
-            <p> 
-                {{ b.type }} — {{ b.name }}
-            </p>
-            {% endfor %}
-        </div>
-    </body>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link
+      rel="shortcut icon"
+      type="image/x-icon"
+      href="{{ site_url }}favicon.ico"
+    />
+    <title>{{ title }}</title>
+  </head>
+  <body>
+    <div class="container">
+      <ul class="nav-list">
+        {% for heading in headings %} {% if heading.level == 2 %}
+        <li class="nav-item">
+          <a class="heading-link" href="#{{ heading.id }}">
+            {{ heading.text }}
+          </a>
+        </li>
+        {% endif %} {% endfor %}
+      </ul>
+      <div class="content">{{ content }}</div>
+      {% for b in blocks %}
+      <p>{{ b.type }} — {{ b.name }}</p>
+      {% endfor %}
+    </div>
+  </body>
+  <script src="{{site_url}}prism.js"></script>
+  <script src="{{site_url}}vim.js"></script>
 </html>

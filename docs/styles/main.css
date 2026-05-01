@@ -1,82 +1,193 @@
+:root {
+  --bg: #000000;
+  --bg-alt: #1e2124;
+  --bg-highlight: #3c4048;
+  --fg: #ffffff;
+  --grey: #7b8496;
+  --blue: #5ea1ff;
+  --green: #5eff6c;
+  --cyan: #5ef1ff;
+  --red: #ff6e5e;
+  --yellow: #f1ff5e;
+  --magenta: #ff5ef1;
+  --pink: #ff5ea0;
+  --orange: #ffbd5e;
+  --purple: #bd5eff;
+  --bg25: repeating-conic-gradient(var(--green) 0% 25%, transparent 0% 100%) 1px
+    0.5px / 2px 2px;
+  --bg75: repeating-conic-gradient(transparent 0% 25%, var(--fg) 0% 100%) 1px
+    0.5px / 2px 2px;
+}
+
 body {
   margin: 0;
   padding: 0;
-  background-color: black;
-  color: white;
-  margin: 0;
-  font-family: "IBMPlexSans", sans-serif;
+  background-color: var(--bg);
+  color: var(--fg);
+  font-family: IBMPlexSans;
+  font-size: 1rem;
+}
+
+hr {
+  width: 100%;
+  color: var(--green);
 }
 
 .container {
-  display: flex;
-  flex-direction: row;
-  min-height: 100vh;
-}
-
-nav {
-  display: flex;
-  flex-direction: column;
-  padding: 20px;
-  max-width: 150px;
-}
-
-nav h3 {
-  margin: 0;
-  margin-bottom: 10px;
+  position: relative;
+  max-width: 700px;
+  margin: auto;
+  padding-top: 50px;
+  padding-left: 12px;
+  padding-right: 12px;
 }
 
 .nav-list {
+  position: fixed;
+  top: 50px;
+  left: 50px;
   list-style: none;
   padding: 0;
+  font-family: CommitMono;
+  font-size: 0.9rem;
+}
+
+h1 {
   margin: 0;
+  font-family: CommitMono;
+}
+
+h2 {
+  margin-top: 25px;
+  border-top: 1px dashed var(--bg-highlight);
+  padding-top: 25px;
+  color: var(--green);
+  font-family: CommitMono;
 }
 
 .nav-item {
   margin-bottom: 16px;
+  white-space: nowrap;
 }
 
-.nav-link {
-  font-weight: bold;
-  font-size: 1em;
-  display: block;
-  padding: 4px 0;
+.post {
+  display: flex;
+  justify-content: space-between;
 }
 
-.nav-item ul {
-  list-style: none;
-  padding: 0;
-  margin: 4px 0 0 12px;
-}
-
-.heading-link {
-  padding: 10px;
-  font-size: 0.9rem;
-  color: darkgray;
-}
-
-.heading-link:hover {
-  color: coral;
+.post-date {
+  color: var(--orange);
 }
 
 .content {
-  padding: 10px;
+  img {
+    max-width: 100%;
+    width: auto;
+    height: auto;
+  }
+
+  .sussy-baka {
+    width: 150px;
+  }
 }
 
 a {
-  text-decoration: none;
-  color: limegreen;
+  color: var(--green);
+  text-decoration: underline;
+  text-decoration-style: dashed;
 }
 
-a:hover {
-  color: coral;
+.dir {
+  all: unset;
+  color: var(--cyan);
+}
+
+a:hover,
+a:focus {
+  outline: none;
+  background: var(--bg25);
+  color: var(--green);
+  animation: flicker 50ms 2;
+}
+
+@keyframes flicker {
+  0%,
+  49% {
+    opacity: 0;
+  }
+  50%,
+  100% {
+    opacity: 1;
+  }
 }
 
 pre {
-  background-color: #0f0f0f;
-  padding: 10px;
+  background-color: var(--bg);
+  overflow-x: auto;
+  border: 2px var(--bg-alt);
+  border-style: dotted dashed solid double;
+}
+
+blockquote {
+  color: var(--grey);
 }
 
 code {
-  font-family: "Courier New", Courier, monospace;
-  font-size: 0.9em;
+  font-family: CommitMono;
+  font-size: 0.8rem;
+  color: var(--orange);
+}
+
+table {
+  margin: auto;
+  width: 90%;
+  border-collapse: collapse;
+  font-family: CommitMono;
+  font-size: 0.8rem;
+  border: 1px var(--green);
+  border-style: dotted dashed solid double;
+}
+
+th,
+td {
+  padding: 5px;
+  text-align: left;
+  vertical-align: top;
+  border-bottom: 1px dashed var(--bg-highlight);
+}
+
+th {
+  color: var(--yellow);
+  border-bottom: 1px dashed var(--green);
+}
+
+tr:last-child td {
+  border-bottom: none;
+}
+
+tr:hover td {
+  background-color: var(--bg-alt);
+}
+
+td code {
+  color: var(--orange);
+}
+
+#vim-help {
+  position: fixed;
+  bottom: 10px;
+  left: 50px;
+  font-family: CommitMono;
+  padding: 0;
+  font-size: 0.8rem;
+  display: grid;
+  grid-template-columns: auto auto;
+  gap: 5px;
+}
+
+.vim-key {
+  color: var(--purple);
+}
+.vim-desc {
+  color: var(--fg);
 }

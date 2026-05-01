@@ -7,6 +7,8 @@ pub fn convert(md_string: &str) -> (Frontmatter, String, Vec<Heading>, Vec<Plugi
     options.insert(Options::ENABLE_GFM);
     options.insert(Options::ENABLE_FOOTNOTES);
     options.insert(Options::ENABLE_WIKILINKS);
+    options.insert(Options::ENABLE_TABLES);
+    options.insert(Options::ENABLE_SUPERSCRIPT);
 
     let mut inside_sussg = false;
     let mut sussg_text = String::new();

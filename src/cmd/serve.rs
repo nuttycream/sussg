@@ -111,7 +111,11 @@ fn watch_for_changes(content_path: PathBuf, reloader: Reloader, config: Config) 
 
             if curr != previous {
                 println!("change detected, rebuilding...");
-                let _ = crate::cmd::build::build(&content_path, true, config.to_owned());
+                match crate::cmd::build::build(&content_path, true, config.to_owned()) {
+                    Ok(_) => {}
+                    Err(e) => eprintln!("error when building:\n\t{e:#}"),
+                }
+
                 reloader.notify();
                 previous = curr;
             }
