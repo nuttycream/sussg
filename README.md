@@ -1,10 +1,5 @@
 <img src="https://raw.githubusercontent.com/nuttycream/sussg/main/docs/static/sussg.svg?sanitize=true" class="sussy-baka" alt="sussy baka" width="150" align="right">
 
-```sussg
-type="frontmatter"
-title="sussg"
-```
-
 # sussg <img src="https://img.shields.io/github/v/release/nuttycream/sussg">
 
 **sussg** (pronounced sus-gee like Sasuke the guy who commited fratricide in
@@ -352,4 +347,22 @@ jobs:
         uses: actions/upload-pages-artifact@v3
         with:
           path: ./path/to/public
+```
+
+## Attribution
+
+Most of the work done here were pulled from examples, but I want to specifically attribute the majority of the functionality to:
+
+- [`pulldown-cmark`](https://github.com/pulldown-cmark/pulldown-cmark/) - converting markdown to HTML
+- [`minijinja`](https://github.com/mitsuhiko/minijinja) - super advance templating with minimal deps
+
+<br>
+<br>
+<hr>
+
+> The frontmatter can be anywhere, for example here at the bottom of the page, hiding, from YOU! and so it doesnt muddy up the README.md. You can't see what I'm talking about in the docs site, but the GH readme should show exactly what I'm talking about.
+
+```sussg
+type="frontmatter"
+title="sussg"
 ```
