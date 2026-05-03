@@ -48,8 +48,6 @@ hr {
   left: 50px;
   list-style: none;
   padding: 0;
-  font-family: CommitMono;
-  font-size: 0.9rem;
 }
 
 h1 {
@@ -95,6 +93,8 @@ a {
   color: var(--green);
   text-decoration: underline;
   text-decoration-style: dashed;
+  font-family: CommitMono;
+  font-size: 0.9rem;
 }
 
 .dir {
@@ -125,7 +125,7 @@ pre {
   background-color: var(--bg);
   overflow-x: auto;
   border: 2px var(--bg-alt);
-  border-style: dotted dashed solid double;
+  border-style: dotted dashed solid solid;
 }
 
 blockquote {
@@ -145,12 +145,13 @@ table {
   font-family: CommitMono;
   font-size: 0.8rem;
   border: 1px var(--green);
-  border-style: dotted dashed solid double;
+  border-style: dotted dashed solid solid;
 }
 
 th,
 td {
-  padding: 5px;
+  padding: 2.5px;
+  padding-left: 5px;
   text-align: left;
   vertical-align: top;
   border-bottom: 1px dashed var(--bg-highlight);
