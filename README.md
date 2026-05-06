@@ -32,13 +32,53 @@ Who knows, really. The name came before the project idea, and it kinda became my
 
 ## Install
 
-sussg can be a single binary you build from source.
+### Nix
+
+`sussg` exposes itself through nix:
+
+```nix
+# as a flake input:
+inputs = {
+    sussg.url = "github:nuttycream/sussg";
+};
+```
+
+Or if you want to use `sussg` in the current shell session:
+
+```sh
+nix shell github:nuttycream/sussg
+```
+
+### Cachix
+
+`sussg` also has a cache available through Cachix. Add the following to your NixOS configuration to avoid lengthy rebuilds and fetching extra build-time dependencies:
+
+```nix
+{
+  nix.settings = {
+    substituters = [ "https://nuttycream.cachix.org" ];
+    trusted-public-keys = [
+      "nuttycream.cachix.org-1:x8URTEpNkAQpFCf0oW5nPDJGI4Q9E8HtAO66JBjSWlY="
+    ];
+  };
+}
+```
+
+Or if using the Cachix CLI outside a NixOS environment:
+
+```sh
+cachix use nuttycream
+```
+
+### Cargo
+
+`sussg` can also be downloaded and installed directly from source, though this requires compiling:
 
 ```sh
 cargo install --git https://github.com/nuttycream/sussg
 ```
 
-Or clone it and build it yourself:
+### Manual Compile
 
 ```sh
 git clone https://github.com/nuttycream/sussg
@@ -348,6 +388,63 @@ jobs:
         with:
           path: ./path/to/public
 ```
+
+### Nix
+
+You can deploy using nix and a pre-built binary with Cachix:
+
+```yaml
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: read
+  pages: write
+  deployments: write
+  id-token: write
+
+jobs:
+  build:
+    name: build site
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: cachix/install-nix-action@v25
+        with:
+          nix_path: nixpkgs=channel:nixos-unstable
+
+      - name: Install Cachix
+        uses: cachix/cachix-action@v14
+        with:
+          name: nuttycream
+
+      - name: build site
+        run: nix run github:nuttycream/sussg -- build
+
+      - name: upload site files as artifact
+        id: deployment
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: ./public
+
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
+```
+
+References:
+
+- [nix.dev](https://nix.dev/guides/recipes/continuous-integration-github-actions.html)
 
 ## Attribution
 
