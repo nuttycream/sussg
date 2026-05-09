@@ -5,7 +5,7 @@ use std::{
 };
 use walkdir::WalkDir;
 
-use sussg::{Frontmatter, Heading, Plugin, PluginArgs, Style, Template, TheThing};
+use crate::convert::{Frontmatter, Heading, Plugin, PluginArgs, Style, Template, TheThing};
 
 /// neat helper func specific for posts
 /// we can reuse get_out_path() but i gotta
