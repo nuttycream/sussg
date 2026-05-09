@@ -63,7 +63,7 @@ impl Reloader {
 }
 
 pub fn serve(content_path: &Path, config: Config) -> anyhow::Result<()> {
-    let _ = crate::cmd::build::build(content_path, true, config.to_owned());
+    let _ = crate::build::build(content_path, true, config.to_owned());
 
     let public_dir = PathBuf::from("./public");
 
@@ -111,7 +111,7 @@ fn watch_for_changes(content_path: PathBuf, reloader: Reloader, config: Config) 
 
             if curr != previous {
                 println!("change detected, rebuilding...");
-                match crate::cmd::build::build(&content_path, true, config.to_owned()) {
+                match crate::build::build(&content_path, true, config.to_owned()) {
                     Ok(_) => {}
                     Err(e) => eprintln!("error when building:\n\t{e:#}"),
                 }

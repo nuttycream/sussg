@@ -1,7 +1,9 @@
-pub mod cmd;
+pub mod build;
 pub mod config;
 pub mod convert;
+pub mod init;
 pub mod post_process;
+pub mod serve;
 pub mod utils;
 
 use std::path::PathBuf;
@@ -138,7 +140,7 @@ fn main() {
     };
 
     let res = match cmd {
-        Command::Init { path } => cmd::init::init(&path),
+        Command::Init { path } => crate::init::init(&path),
         Command::Build {
             path,
             local,
@@ -153,7 +155,7 @@ fn main() {
 
             cfg.general.drafts = drafts;
 
-            cmd::build::build(&path, local, cfg)
+            build::build(&path, local, cfg)
         }
         Command::Serve {
             path,
@@ -169,7 +171,7 @@ fn main() {
             cfg.serve.port = port;
             cfg.general.drafts = drafts;
 
-            cmd::serve::serve(&path, cfg)
+            serve::serve(&path, cfg)
         }
     };
 
