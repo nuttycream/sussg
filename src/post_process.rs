@@ -1,4 +1,4 @@
-use sussg::Heading;
+use crate::convert::Heading;
 
 pub fn post_process(html: &str, headings: &[Heading]) -> String {
     // ideally we can make some of these configurable

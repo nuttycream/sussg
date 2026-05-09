@@ -6,9 +6,8 @@ use std::{
 
 use anyhow::Context;
 use minijinja::{Environment, context};
-use sussg::SectionThing;
 
-use crate::{config::Config, utils::*};
+use crate::{config::Config, convert::SectionThing, utils::*};
 
 pub fn build(path: &Path, is_local: bool, mut config: Config) -> anyhow::Result<()> {
     if is_local {
