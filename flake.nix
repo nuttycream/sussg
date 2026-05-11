@@ -2,45 +2,69 @@
   description = "sussg";
 
   inputs = {
-    nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
-    rust-overlay.url = "github:oxalica/rust-overlay";
-    flake-utils.url = "github:numtide/flake-utils";
+    nixpkgs.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
+
+    flake-parts.url = "github:hercules-ci/flake-parts";
+
+    crane.url = "github:ipetkov/crane";
+
+    fenix = {
+      url = "github:nix-community/fenix";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
   };
 
   outputs = {
-    self,
     nixpkgs,
-    rust-overlay,
-    flake-utils,
+    flake-parts,
     ...
-  }:
-    flake-utils.lib.eachDefaultSystem (
-      system: let
-        overlays = [(import rust-overlay)];
-        pkgs = import nixpkgs {
-          inherit system overlays;
+  } @ inputs:
+    flake-parts.lib.mkFlake {inherit inputs;} {
+      systems = nixpkgs.lib.systems.flakeExposed;
+
+      perSystem = {
+        pkgs,
+        system,
+        ...
+      }: let
+        rustToolchain = inputs.fenix.packages.${system}.stable.toolchain;
+
+        craneLib = (inputs.crane.mkLib pkgs).overrideToolchain rustToolchain;
+
+        versionInfo = craneLib.crateNameFromCargoToml {cargoToml = ./Cargo.toml;};
+        src = craneLib.cleanCargoSource ./.;
+
+        commonArgs = {
+          inherit (versionInfo) pname version;
+          inherit src;
         };
-      in
-        with pkgs; {
-          packages.default = pkgs.rustPlatform.buildRustPackage {
-            name = "sussg";
-            src = ./.;
-            buildInputs = [];
-            nativeBuildInputs = [];
-            cargoHash = "sha256-3B4lD2Vgo78xgK2kuSIkkhv1S485Y5KEjO3YV18a//U=";
-          };
 
-          devShells.default = mkShell {
-            name = "sussg";
-            packages = with pkgs; [
-              rust-bin.stable.latest.default
-            ];
+        cargoArtifacts = craneLib.buildDepsOnly commonArgs;
+      in {
+        packages = let
+          sussg = craneLib.buildPackage (
+            commonArgs
+            // {
+              inherit cargoArtifacts src;
+            }
+          );
+        in {
+          inherit sussg;
+          default = sussg;
+        };
 
-            buildInputs = [
-              openssl
-              pkg-config
+        devShells.default = let
+          inherit
+            (pkgs)
+            mkShell
+            ;
+        in
+          mkShell {
+            name = "sussg-shell";
+            packages = [
+              rustToolchain
             ];
           };
-        }
-    );
+      };
+    };
 }
