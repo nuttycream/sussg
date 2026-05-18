@@ -131,7 +131,7 @@ pre {
   background-color: var(--bg);
   overflow-x: auto;
   border: 2px var(--bg-alt);
-  border-style: dotted dashed solid solid;
+  border-style: dashed dashed solid solid;
 }
 
 blockquote {
@@ -154,7 +154,7 @@ table {
   font-family: CommitMono;
   font-size: 0.8rem;
   border: 1px var(--green);
-  border-style: dotted dashed solid solid;
+  border-style: dashed dashed solid solid;
 }
 
 th,

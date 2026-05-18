@@ -16,7 +16,7 @@ site.
 Well then why not just build out your entire site in raw html? You might ask,
 which I'll reply with: good question, because well uhhh
 
-### features
+### Features
 
 - Simple
 - Ultimate
@@ -26,15 +26,23 @@ which I'll reply with: good question, because well uhhh
 - Plugin Support
 - Browser live-reload
 
-### for who?
+### For who?
 
-Who knows, really. The name came before the project idea, and it kinda became my own personal static site generator. If you want to make a site with very simple, low-cortisol
+Who knows, really. The name birthed the project and it sorta became my personal static site generator. If you want a fairly low-cortisol static site generator, then this might work for you. Though, it does require a lot of upfront work from the end user. As it doesn't have any built-in templates, to use, other than this `/docs` site example.
 
 ## Install
 
+### Cargo
+
+`sussg` can be downloaded and installed directly through cargo:
+
+```sh
+cargo install --git https://github.com/nuttycream/sussg
+```
+
 ### Nix
 
-`sussg` exposes itself through nix:
+`sussg` also exposes itself through nix:
 
 ```nix
 # as a flake input:
@@ -68,14 +76,6 @@ Or if using the Cachix CLI outside a NixOS environment:
 
 ```sh
 cachix use nuttycream
-```
-
-### Cargo
-
-`sussg` can also be downloaded and installed directly from source, though this requires compiling:
-
-```sh
-cargo install --git https://github.com/nuttycream/sussg
 ```
 
 ### Manual Compile
