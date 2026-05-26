@@ -25,12 +25,29 @@ pub fn build(path: &Path, is_local: bool, mut config: Config) -> anyhow::Result<
         Err(e) => println!("somehow failed to create {}: {}", output_dir.display(), e),
     }
 
-    read_static(&main_path.join("static"))?;
+    let statics = copy_static_files(&main_path.join("static"))?;
+    println!("processed static folders:");
+    for file in &statics {
+        println!("\t... {}", file);
+    }
 
     let styles = read_styles(&main_path.join("styles"))?;
+    println!("found styles:");
+    for style in &styles {
+        println!("\t... {}", style.path.display());
+    }
+
     let templates = read_templates(&main_path.join("templates"))?;
+    println!("found templates:");
+    for templ in &templates {
+        println!("\t... {}", templ.name);
+    }
 
     let plugins = read_plugins(&main_path.join("plugins"))?;
+    println!("found plugins:");
+    for plugin in &plugins {
+        println!("\t... {}", plugin.name);
+    }
 
     let mut env = Environment::new();
     minijinja_contrib::add_to_environment(&mut env);
@@ -97,7 +114,7 @@ pub fn build(path: &Path, is_local: bool, mut config: Config) -> anyhow::Result<
         // this is where we'll start to populate
         // templates and then write them out to html
 
-        println!("creating:{}", thing.path.display());
+        println!("processing: {}", thing.path.display());
 
         // most recent maps to sections like so:
         // {{ most_recent.posts.title }}
@@ -159,7 +176,7 @@ pub fn build(path: &Path, is_local: bool, mut config: Config) -> anyhow::Result<
 
         fs::write(&out, rendered).expect("somehow failed to write out file to current dir");
 
-        println!("created: {}", out.display());
+        println!("output: {}", out.display());
     }
 
     Ok(())

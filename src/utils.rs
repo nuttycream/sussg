@@ -53,7 +53,8 @@ pub fn get_out_path(content_root_path: &Path) -> PathBuf {
     }
 }
 
-pub fn read_static(static_path: &Path) -> anyhow::Result<()> {
+pub fn copy_static_files(static_path: &Path) -> anyhow::Result<Vec<String>> {
+    let mut folders = Vec::new();
     // maybe add some optimizations to images here? hmmmm?
     for static_file in WalkDir::new(static_path).into_iter().filter_map(|e| e.ok()) {
         let from = static_file.path();
@@ -61,15 +62,17 @@ pub fn read_static(static_path: &Path) -> anyhow::Result<()> {
 
         if static_file.file_type().is_dir() {
             match fs::create_dir_all(&to) {
-                Ok(_) => {}
-                Err(e) => println!("somehow failed to create {}: {}", to.display(), e),
+                Ok(_) => {
+                    folders.push(to.display().to_string());
+                }
+                Err(e) => eprintln!("somehow failed to create {}: {}", to.display(), e),
             }
         } else if static_file.file_type().is_file() {
             fs::copy(from, to).expect("failed to copy file");
         }
     }
 
-    Ok(())
+    Ok(folders)
 }
 
 pub fn read_content(
@@ -121,8 +124,6 @@ pub fn read_styles(styles_path: &Path) -> anyhow::Result<Vec<Style>> {
             .unwrap_or("")
             .to_string();
 
-        println!("processing style:{}", path.display());
-
         style.path = path
             .strip_prefix(styles_path)
             .expect("Somehow failed to strip_prefix for ./styles")
@@ -154,7 +155,6 @@ pub fn read_templates(template_path: &Path) -> anyhow::Result<Vec<Template>> {
         let yea = template_file.path().extension() == Some(OsStr::new("html"));
 
         if yea {
-            println!("processing templ:{}", template_file.path().display());
             let name = template_file
                 .path()
                 .file_name()
@@ -180,7 +180,6 @@ pub fn read_plugins(plugin_path: &Path) -> anyhow::Result<Vec<Plugin>> {
         let yea = plugin_file.path().extension() == Some(OsStr::new("html"));
 
         if yea {
-            println!("processing plugin:{}", plugin_file.path().display());
             let name = plugin_file
                 .path()
                 .file_name()
@@ -208,8 +207,6 @@ fn read_page(
     base_template: &str,
 ) -> anyhow::Result<TheThing> {
     let (frontmatter, html_output, headings, plugin_args) = read_markdown(page_path)?;
-
-    println!("processing page:{}", page_path.display());
 
     let path = page_path
         .strip_prefix(content_root_path)
