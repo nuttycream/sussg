@@ -26,6 +26,7 @@ body {
   color: var(--fg);
   font-family: IBMPlexSans;
   font-size: 1rem;
+  line-height: 1.6;
 }
 
 hr {
@@ -56,11 +57,16 @@ h1 {
 }
 
 h2 {
-  margin-top: 25px;
+  margin-top: 60px;
+  padding-top: 30px;
   border-top: 1px dashed var(--bg-highlight);
-  padding-top: 25px;
   color: var(--green);
   font-family: CommitMono;
+}
+
+h3 {
+  text-decoration-line: underline;
+  text-decoration-color: var(--cyan);
 }
 
 .nav-item {
@@ -125,11 +131,14 @@ pre {
   background-color: var(--bg);
   overflow-x: auto;
   border: 2px var(--bg-alt);
-  border-style: dotted dashed solid solid;
+  border-style: dashed dashed solid solid;
 }
 
 blockquote {
-  color: var(--grey);
+  margin: 0;
+  padding-left: 12px;
+  border-left: 2px dashed var(--orange);
+  color: var(--fg);
 }
 
 code {
@@ -145,7 +154,7 @@ table {
   font-family: CommitMono;
   font-size: 0.8rem;
   border: 1px var(--green);
-  border-style: dotted dashed solid solid;
+  border-style: dashed dashed solid solid;
 }
 
 th,
@@ -191,4 +200,52 @@ td code {
 }
 .vim-desc {
   color: var(--fg);
+}
+
+@media (max-width: 900px) {
+  .nav-list {
+    position: static;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px 16px;
+    max-width: 700px;
+    margin: 0 auto 30px;
+    padding: 12px;
+    border-top: 1px dashed var(--bg-highlight);
+    border-bottom: 1px dashed var(--bg-highlight);
+  }
+
+  .nav-item {
+    margin-bottom: 0;
+  }
+
+  .container {
+    padding-top: 20px;
+  }
+}
+
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--bg-highlight) transparent;
+}
+
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--bg-highlight);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--grey);
+}
+
+::-webkit-scrollbar-corner {
+  background: transparent;
 }

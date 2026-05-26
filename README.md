@@ -16,7 +16,7 @@ site.
 Well then why not just build out your entire site in raw html? You might ask,
 which I'll reply with: good question, because well uhhh
 
-### features
+### Features
 
 - Simple
 - Ultimate
@@ -26,15 +26,23 @@ which I'll reply with: good question, because well uhhh
 - Plugin Support
 - Browser live-reload
 
-### for who?
+### For who?
 
-Who knows, really. The name came before the project idea, and it kinda became my own personal static site generator. If you want to make a site with very simple, low-cortisol
+Who knows, really. The name birthed the project and it sorta became my personal static site generator. If you want a fairly low-cortisol static site generator, then this might work for you. Though, it does require a lot of upfront work from the end user. As it doesn't have any built-in templates, to use, other than this `/docs` site example.
 
 ## Install
 
+### Cargo
+
+`sussg` can be downloaded and installed directly through cargo:
+
+```sh
+cargo install --git https://github.com/nuttycream/sussg
+```
+
 ### Nix
 
-`sussg` exposes itself through nix:
+`sussg` also exposes itself through nix:
 
 ```nix
 # as a flake input:
@@ -68,14 +76,6 @@ Or if using the Cachix CLI outside a NixOS environment:
 
 ```sh
 cachix use nuttycream
-```
-
-### Cargo
-
-`sussg` can also be downloaded and installed directly from source, though this requires compiling:
-
-```sh
-cargo install --git https://github.com/nuttycream/sussg
 ```
 
 ### Manual Compile
@@ -189,23 +189,6 @@ on every page automatically. Any extra CSS in `styles/` is still copied to
 `template.base` picks which file in `templates/` is used when a page doesn't
 override it.
 
-## Content
-
-Anything in `content/` ending in `.md` becomes a page. URL routing works like
-this:
-
-| source                     | url               |
-| -------------------------- | ----------------- |
-| `content/index.md`         | `/`               |
-| `content/posts/index.md`   | `/posts/`         |
-| `content/posts/install.md` | `/posts/install/` |
-| `content/doofus/bleh.md`   | `/doofus/bleh/`   |
-
-Subdirectories also become `sections`. Anything under `content/posts/` is
-grouped into the `posts` section, accessible from any template as
-`{{ sections.posts }}`. Same for `content/notes/`, `content/projects/`, and
-so on.
-
 ## Frontmatter
 
 Each page should declare metadata `sussg` codeblock to properly be registered. This can be placed anywhere within the page.
@@ -230,6 +213,23 @@ Possible args:
 | `template`    | string          | use a different template than the configured base        |
 | `styles`      | array of string | extra stylesheets to link (names without `.css`)         |
 | `is_archived` | bool            | metadata flag, exposed via `frontmatter` in templates    |
+
+## Content
+
+Anything in `content/` ending in `.md` becomes a page. URL routing works like
+this:
+
+| source                     | url               |
+| -------------------------- | ----------------- |
+| `content/index.md`         | `/`               |
+| `content/posts/index.md`   | `/posts/`         |
+| `content/posts/install.md` | `/posts/install/` |
+| `content/doofus/bleh.md`   | `/doofus/bleh/`   |
+
+Subdirectories also become `sections`. Anything under `content/posts/` is
+grouped into the `posts` section, accessible from any template as
+`{{ sections.posts }}`. Same for `content/notes/`, `content/projects/`, and
+so on.
 
 ## Templates
 
@@ -267,6 +267,38 @@ An example minimal `templates/base.html`:
 A page can override the template by setting `template = "post"` in its
 frontmatter, which would resolve to `templates/post.html`. Templates can use
 each other via minijinja's `{% extends %}` / `{% include %}` like normal.
+
+### Building a table of contents
+
+In your templates, the `headings` variable gives you every heading on the page with its `level`, `text`, and `id`:
+
+```html
+<nav class="toc">
+  {% for h in headings %}
+  <a href="#{{ h.id }}" class="{{ h.level }}">{{ h.text }}</a>
+  {% endfor %}
+</nav>
+```
+
+### Listing posts in a section
+
+Anything under `content/posts/` is grouped into `sections.posts`. You can loop over them:
+
+```html
+<ul>
+  {% for post in sections.posts %}
+  <li>
+    <a href="{{ post.url }}">{{ post.title }}</a>
+    {% if post.date %}<time>{{ post.date }}</time>{% endif %} {% if
+    post.description %}
+    <p>{{ post.description }}</p>
+    {% endif %}
+  </li>
+  {% endfor %}
+</ul>
+```
+
+> Note: a reminder that anything within content/ can be turned into a "section". You can for example, have `content/stuffs/` which would be grouped as `section.stuffs`
 
 ## Styles
 
