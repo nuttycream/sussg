@@ -74,7 +74,7 @@ pub fn serve(content_path: &Path, config: Config) -> anyhow::Result<()> {
     println!(
         "serving from: {}\nwatching for changes in:\n{}",
         public_dir.canonicalize()?.display(),
-        PATHS_TO_WATCH.join("\n")
+        PATHS_TO_WATCH.join(", ")
     );
 
     let listener = TcpListener::bind(format!("127.0.0.1:{}", config.serve.port))?;
@@ -110,7 +110,9 @@ fn watch_for_changes(content_path: PathBuf, reloader: Reloader, config: Config) 
             };
 
             if curr != previous {
+                println!("------------------------------");
                 println!("change detected, rebuilding...");
+                println!("------------------------------");
                 match crate::build::build(&content_path, true, config.to_owned()) {
                     Ok(_) => {}
                     Err(e) => eprintln!("error when building:\n\t{e:#}"),
