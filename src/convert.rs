@@ -53,7 +53,6 @@ pub struct Frontmatter {
     /// it will still inherit base.html
     /// unless overriden
     pub template: Option<String>,
-    pub use_base: Option<bool>, // should default to true
 
     pub description: Option<String>,
     pub author: Option<String>,
@@ -61,7 +60,6 @@ pub struct Frontmatter {
     pub draft: Option<bool>,
 
     pub styles: Option<Vec<String>>,
-    pub use_main: Option<bool>, // similar to use_base
 }
 
 // Can be anything, a post,
