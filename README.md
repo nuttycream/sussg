@@ -189,23 +189,6 @@ on every page automatically. Any extra CSS in `styles/` is still copied to
 `template.base` picks which file in `templates/` is used when a page doesn't
 override it.
 
-## Content
-
-Anything in `content/` ending in `.md` becomes a page. URL routing works like
-this:
-
-| source                     | url               |
-| -------------------------- | ----------------- |
-| `content/index.md`         | `/`               |
-| `content/posts/index.md`   | `/posts/`         |
-| `content/posts/install.md` | `/posts/install/` |
-| `content/doofus/bleh.md`   | `/doofus/bleh/`   |
-
-Subdirectories also become `sections`. Anything under `content/posts/` is
-grouped into the `posts` section, accessible from any template as
-`{{ sections.posts }}`. Same for `content/notes/`, `content/projects/`, and
-so on.
-
 ## Frontmatter
 
 Each page should declare metadata `sussg` codeblock to properly be registered. This can be placed anywhere within the page.
@@ -230,6 +213,23 @@ Possible args:
 | `template`    | string          | use a different template than the configured base        |
 | `styles`      | array of string | extra stylesheets to link (names without `.css`)         |
 | `is_archived` | bool            | metadata flag, exposed via `frontmatter` in templates    |
+
+## Content
+
+Anything in `content/` ending in `.md` becomes a page. URL routing works like
+this:
+
+| source                     | url               |
+| -------------------------- | ----------------- |
+| `content/index.md`         | `/`               |
+| `content/posts/index.md`   | `/posts/`         |
+| `content/posts/install.md` | `/posts/install/` |
+| `content/doofus/bleh.md`   | `/doofus/bleh/`   |
+
+Subdirectories also become `sections`. Anything under `content/posts/` is
+grouped into the `posts` section, accessible from any template as
+`{{ sections.posts }}`. Same for `content/notes/`, `content/projects/`, and
+so on.
 
 ## Templates
 
@@ -267,6 +267,38 @@ An example minimal `templates/base.html`:
 A page can override the template by setting `template = "post"` in its
 frontmatter, which would resolve to `templates/post.html`. Templates can use
 each other via minijinja's `{% extends %}` / `{% include %}` like normal.
+
+### Building a table of contents
+
+In your templates, the `headings` variable gives you every heading on the page with its `level`, `text`, and `id`:
+
+```html
+<nav class="toc">
+  {% for h in headings %}
+  <a href="#{{ h.id }}" class="{{ h.level }}">{{ h.text }}</a>
+  {% endfor %}
+</nav>
+```
+
+### Listing posts in a section
+
+Anything under `content/posts/` is grouped into `sections.posts`. You can loop over them:
+
+```html
+<ul>
+  {% for post in sections.posts %}
+  <li>
+    <a href="{{ post.url }}">{{ post.title }}</a>
+    {% if post.date %}<time>{{ post.date }}</time>{% endif %} {% if
+    post.description %}
+    <p>{{ post.description }}</p>
+    {% endif %}
+  </li>
+  {% endfor %}
+</ul>
+```
+
+> Note: a reminder that anything within content/ can be turned into a "section". You can for example, have `content/stuffs/` which would be grouped as `section.stuffs`
 
 ## Styles
 
